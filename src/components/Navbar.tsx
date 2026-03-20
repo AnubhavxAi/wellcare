@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart, Menu, X, User, LogOut, ChevronDown } from "lucide-react";
 import CartSidebar from "./CartSidebar";
-import LoginModal from "./LoginModal";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 
@@ -25,7 +24,7 @@ export default function Navbar() {
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const { totalItems } = useCart();
-  const { user, userProfile, logout, loading: authLoading } = useAuth();
+  const { user, logout, openLogin } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -43,8 +42,8 @@ export default function Navbar() {
   }, [isUserDropdownOpen]);
 
   const getInitials = () => {
-    if (userProfile?.name) {
-      return userProfile.name
+    if (user?.name) {
+      return user.name
         .split(" ")
         .map((n) => n[0])
         .join("")
@@ -103,65 +102,61 @@ export default function Navbar() {
           {/* Right side icons */}
           <div className="flex items-center space-x-2 sm:space-x-3">
             {/* Auth State */}
-            {!authLoading && (
-              <>
-                {user ? (
-                  /* Logged-in: Avatar + Dropdown */
-                  <div className="relative">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsUserDropdownOpen(!isUserDropdownOpen);
-                      }}
-                      className="hidden sm:flex items-center space-x-1.5 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-                    >
-                      <div className="w-8 h-8 bg-[var(--color-brand-green)] text-white rounded-full flex items-center justify-center text-xs font-bold">
-                        {getInitials()}
-                      </div>
-                      <ChevronDown size={14} className="text-gray-400" />
-                    </button>
-
-                    {/* Dropdown */}
-                    <AnimatePresence>
-                      {isUserDropdownOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -5, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: -5, scale: 0.95 }}
-                          transition={{ duration: 0.15 }}
-                          className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div className="px-4 py-3 border-b border-gray-100">
-                            <p className="text-sm font-bold text-gray-900">
-                              {userProfile?.name || "Welcome!"}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-0.5">
-                              {userProfile?.phone || user.phoneNumber}
-                            </p>
-                          </div>
-                          <button
-                            onClick={handleLogout}
-                            className="w-full flex items-center space-x-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                          >
-                            <LogOut size={16} />
-                            <span>Logout</span>
-                          </button>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+            {user ? (
+              /* Logged-in: Avatar + Dropdown */
+              <div className="relative">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsUserDropdownOpen(!isUserDropdownOpen);
+                  }}
+                  className="hidden sm:flex items-center space-x-1.5 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  <div className="w-8 h-8 bg-[var(--color-brand-green)] text-white rounded-full flex items-center justify-center text-xs font-bold">
+                    {getInitials()}
                   </div>
-                ) : (
-                  /* Not logged in: Login button */
-                  <button
-                    onClick={() => setIsLoginOpen(true)}
-                    className="hidden sm:flex items-center space-x-1.5 px-4 py-2 text-sm font-semibold text-[var(--color-brand-green)] hover:bg-green-50 rounded-lg transition-colors"
-                  >
-                    <User size={18} />
-                    <span>Login</span>
-                  </button>
-                )}
-              </>
+                  <ChevronDown size={14} className="text-gray-400" />
+                </button>
+
+                {/* Dropdown */}
+                <AnimatePresence>
+                  {isUserDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -5, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -5, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <p className="text-sm font-bold text-gray-900">
+                          {user?.name || "Welcome!"}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {user?.phone}
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center space-x-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut size={16} />
+                        <span>Logout</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              /* Not logged in: Login button */
+              <button
+                onClick={openLogin}
+                className="hidden sm:flex items-center space-x-1.5 px-4 py-2 text-sm font-semibold text-[var(--color-brand-green)] hover:bg-green-50 rounded-lg transition-colors"
+              >
+                <User size={18} />
+                <span>Login</span>
+              </button>
             )}
 
             {/* Cart */}
@@ -226,10 +221,10 @@ export default function Navbar() {
                     </div>
                     <div>
                       <p className="text-sm font-bold text-gray-900">
-                        {userProfile?.name || "User"}
+                        {user?.name || "User"}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {userProfile?.phone || user.phoneNumber}
+                        {user?.phone}
                       </p>
                     </div>
                   </div>
@@ -248,7 +243,7 @@ export default function Navbar() {
                 <button
                   onClick={() => {
                     setIsMobileMenuOpen(false);
-                    setIsLoginOpen(true);
+                    openLogin();
                   }}
                   className="flex items-center space-x-2 px-4 py-3 mb-4 bg-green-50 text-[var(--color-brand-green)] font-semibold rounded-xl"
                 >
@@ -275,7 +270,6 @@ export default function Navbar() {
       </AnimatePresence>
 
       <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </header>
   );
 }

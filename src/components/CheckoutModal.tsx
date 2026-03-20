@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2, AlertCircle } from "lucide-react";
 import OrderSuccessModal from "./OrderSuccessModal";
 import { useCart, CartItem } from "@/context/CartContext";
 import { placeOrder } from "@/lib/orders";
+import { useAuth } from "@/context/AuthContext";
+import { doc, updateDoc, increment } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 // Simple custom WhatsApp Icon
 const WhatsAppIcon = ({ size = 20 }: { size?: number }) => (
@@ -63,6 +66,18 @@ export default function CheckoutModal({ isOpen, onClose, onComplete, cartItems, 
     pincode: "",
     paymentMethod: "cod",
   });
+  
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (isOpen && user) {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: prev.fullName || user.name || "",
+        phone: prev.phone || user.phone || "",
+      }));
+    }
+  }, [isOpen, user]);
 
   const [pincodeError, setPincodeError] = useState("");
 
@@ -116,6 +131,16 @@ export default function CheckoutModal({ isOpen, onClose, onComplete, cartItems, 
       });
 
       setOrderId(newOrderId);
+
+      // Increment orderCount for logged-in user
+      if (user?.phone) {
+        try {
+          const userRef = doc(db, "users", user.phone);
+          await updateDoc(userRef, { orderCount: increment(1) });
+        } catch (e) {
+          console.error("Failed to increment user orderCount", e);
+        }
+      }
 
       // Also send WhatsApp message
       const message = generateWhatsAppMessage(cartItems, formData, formData.paymentMethod, totalAmount, newOrderId);

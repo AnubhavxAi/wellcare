@@ -1,0 +1,20 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Prescription uploads
+    match /prescriptions/{userId}/{allPaths=**} {
+      // Anyone can upload (for non-logged-in users too)
+      allow write: if request.resource.size < 5 * 1024 * 1024
+                   && (request.resource.contentType.matches('image/jpeg')
+                       || request.resource.contentType.matches('image/png')
+                       || request.resource.contentType.matches('application/pdf'));
+      allow read: if true;
+    }
+
+    // Default deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

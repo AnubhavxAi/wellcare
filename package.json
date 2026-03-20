@@ -6,9 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed-products": "ts-node -O '{\"module\":\"commonjs\"}' scripts/seedProducts.ts",
+    "seed-categories": "ts-node -O '{\"module\":\"commonjs\"}' scripts/seedCategories.ts"
   },
   "dependencies": {
+    "firebase": "^12.11.0",
     "framer-motion": "^12.36.0",
     "lucide-react": "^0.577.0",
     "next": "16.1.6",
@@ -16,6 +19,7 @@
     "react-dom": "19.2.3"
   },
   "devDependencies": {
+    "ts-node": "^10.9.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

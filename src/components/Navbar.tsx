@@ -1,40 +1,88 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Menu, X } from "lucide-react";
+import { ShoppingCart, Menu, X, User, LogOut, ChevronDown } from "lucide-react";
 import CartSidebar from "./CartSidebar";
+import LoginModal from "./LoginModal";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 
 const navLinks = [
   { name: "Home", href: "#" },
-  { name: "Categories", href: "#categories" },
+  { name: "Medicines", href: "#categories" },
+  { name: "Lab Tests", href: "#lab-tests" },
   { name: "Doctors", href: "#doctors" },
-  { name: "Contact", href: "#contact" },
+  { name: "Offers", href: "#" },
+  { name: "Upload Rx", href: "#prescription-upload" },
 ];
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { totalItems } = useCart();
+  const { user, userProfile, logout, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClick = () => setIsUserDropdownOpen(false);
+    if (isUserDropdownOpen) {
+      document.addEventListener("click", handleClick);
+      return () => document.removeEventListener("click", handleClick);
+    }
+  }, [isUserDropdownOpen]);
+
+  const getInitials = () => {
+    if (userProfile?.name) {
+      return userProfile.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2);
+    }
+    return "U";
+  };
+
+  const handleLogout = async () => {
+    setIsUserDropdownOpen(false);
+    await logout();
+  };
 
   return (
-    <header className="bg-white shadow-sm relative z-40">
+    <header
+      className={`bg-white/95 backdrop-blur-md fixed w-full top-0 z-[50] h-16 transition-shadow duration-300 ${
+        isScrolled ? "shadow-md" : "shadow-sm"
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
+        <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <img src="/logo.png" alt="Wellcare Pharmacy Logo" className="max-h-[60px] object-contain" />
+            <img
+              src="/logo.png"
+              alt="Wellcare Pharmacy Logo"
+              className="max-h-[40px] lg:max-h-[48px] object-contain"
+            />
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden lg:flex space-x-6 xl:space-x-8">
             {navLinks.map((link) => (
               <a
                 key={link.name}
                 href={link.href}
-                className="relative text-gray-700 hover:text-gray-900 font-medium py-2 transition-colors"
+                className="relative text-gray-700 hover:text-gray-900 font-medium py-2 transition-colors text-sm"
                 onMouseEnter={() => setHoveredLink(link.name)}
                 onMouseLeave={() => setHoveredLink(null)}
               >
@@ -53,25 +101,92 @@ export default function Navbar() {
           </nav>
 
           {/* Right side icons */}
-          <div className="flex items-center space-x-4">
-            <button 
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            {/* Auth State */}
+            {!authLoading && (
+              <>
+                {user ? (
+                  /* Logged-in: Avatar + Dropdown */
+                  <div className="relative">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsUserDropdownOpen(!isUserDropdownOpen);
+                      }}
+                      className="hidden sm:flex items-center space-x-1.5 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                    >
+                      <div className="w-8 h-8 bg-[var(--color-brand-green)] text-white rounded-full flex items-center justify-center text-xs font-bold">
+                        {getInitials()}
+                      </div>
+                      <ChevronDown size={14} className="text-gray-400" />
+                    </button>
+
+                    {/* Dropdown */}
+                    <AnimatePresence>
+                      {isUserDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -5, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -5, scale: 0.95 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="px-4 py-3 border-b border-gray-100">
+                            <p className="text-sm font-bold text-gray-900">
+                              {userProfile?.name || "Welcome!"}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {userProfile?.phone || user.phoneNumber}
+                            </p>
+                          </div>
+                          <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center space-x-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            <LogOut size={16} />
+                            <span>Logout</span>
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  /* Not logged in: Login button */
+                  <button
+                    onClick={() => setIsLoginOpen(true)}
+                    className="hidden sm:flex items-center space-x-1.5 px-4 py-2 text-sm font-semibold text-[var(--color-brand-green)] hover:bg-green-50 rounded-lg transition-colors"
+                  >
+                    <User size={18} />
+                    <span>Login</span>
+                  </button>
+                )}
+              </>
+            )}
+
+            {/* Cart */}
+            <button
               onClick={() => setIsCartOpen(true)}
               className="relative p-2 text-gray-700 hover:text-[var(--color-brand-green)] transition-colors"
             >
-              <ShoppingCart size={24} />
+              <ShoppingCart size={22} />
               {totalItems > 0 && (
-                <span className="absolute top-0 right-0 bg-[var(--color-brand-green)] text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center translate-x-1/4 -translate-y-1/4">
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-0.5 -right-0.5 bg-[var(--color-brand-green)] text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center"
+                >
                   {totalItems}
-                </span>
+                </motion.span>
               )}
             </button>
-            
+
             {/* Mobile menu button */}
             <button
-              className="md:hidden p-2 text-gray-700 hover:text-gray-900"
+              className="lg:hidden p-2 text-gray-700 hover:text-gray-900"
               onClick={() => setIsMobileMenuOpen(true)}
             >
-              <Menu size={24} />
+              <Menu size={22} />
             </button>
           </div>
         </div>
@@ -85,7 +200,7 @@ export default function Navbar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.5 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black z-40 md:hidden"
+              className="fixed inset-0 bg-black z-40 lg:hidden"
               onClick={() => setIsMobileMenuOpen(false)}
             />
             <motion.div
@@ -93,20 +208,61 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 h-full w-64 bg-white z-50 shadow-xl flex flex-col pt-20 px-6 md:hidden"
+              className="fixed top-16 right-0 h-[calc(100%-4rem)] w-72 bg-white z-[60] shadow-xl flex flex-col pt-6 px-6 lg:hidden"
             >
               <button
-                className="absolute top-6 right-6 p-2 text-gray-700 hover:text-gray-900"
+                className="absolute top-5 right-5 p-2 text-gray-700 hover:text-gray-900"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <X size={24} />
+                <X size={22} />
               </button>
-              <nav className="flex flex-col space-y-6 mt-8">
+
+              {/* User Status in mobile menu */}
+              {user ? (
+                <div className="mb-4 p-3 bg-green-50 rounded-xl">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-8 h-8 bg-[var(--color-brand-green)] text-white rounded-full flex items-center justify-center text-xs font-bold">
+                      {getInitials()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">
+                        {userProfile?.name || "User"}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {userProfile?.phone || user.phoneNumber}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      setIsMobileMenuOpen(false);
+                      await logout();
+                    }}
+                    className="flex items-center space-x-1.5 text-xs text-red-600 font-medium"
+                  >
+                    <LogOut size={14} />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setIsLoginOpen(true);
+                  }}
+                  className="flex items-center space-x-2 px-4 py-3 mb-4 bg-green-50 text-[var(--color-brand-green)] font-semibold rounded-xl"
+                >
+                  <User size={20} />
+                  <span>Login / Register</span>
+                </button>
+              )}
+
+              <nav className="flex flex-col space-y-1">
                 {navLinks.map((link) => (
                   <a
                     key={link.name}
                     href={link.href}
-                    className="text-lg font-medium text-gray-800 hover:text-[var(--color-brand-green)] transition-colors"
+                    className="text-base font-medium text-gray-800 hover:text-[var(--color-brand-green)] hover:bg-green-50 transition-colors px-4 py-3 rounded-xl"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {link.name}
@@ -119,6 +275,7 @@ export default function Navbar() {
       </AnimatePresence>
 
       <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </header>
   );
 }

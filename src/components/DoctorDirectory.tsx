@@ -2,98 +2,88 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, MapPin, Activity, Stethoscope, ChevronDown } from "lucide-react";
-import { doctorsData as oldDoctorsData, commonIllnesses } from "@/data/doctorsData";
-import { agraDoctors, Doctor as AgraDoctor } from "@/data/agraDoctors";
+import { Search, MapPin, Activity, Stethoscope } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { doctorsData, specialties } from "@/data/doctors";
 
-// Use agraDoctors dataset
-const doctorsData = agraDoctors;
+interface DoctorDirectoryProps {
+  limit?: number;
+  hideFilters?: boolean;
+}
 
-export default function DoctorDirectory() {
+export default function DoctorDirectory({ limit, hideFilters = false }: DoctorDirectoryProps) {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedIllness, setSelectedIllness] = useState<string>("All");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedSpecialty, setSelectedSpecialty] = useState<string>("All");
 
-  // Filter doctors based on search term and selected illness
   const filteredDoctors = useMemo(() => {
-    return doctorsData.filter((doctor) => {
-      // Check if selected illness matches
-      const matchesIllness = selectedIllness === "All" || doctor.illnessesTreated.includes(selectedIllness);
-      
-      // Check search term against illnesses or location
+    let result = doctorsData.filter((doctor) => {
+      const matchesSpecialty = selectedSpecialty === "All" || doctor.specialty === selectedSpecialty;
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch = 
         searchTerm === "" || 
-        doctor.clinicLocation.toLowerCase().includes(searchLower) ||
-        doctor.illnessesTreated.some(ill => ill.toLowerCase().includes(searchLower));
+        doctor.name.toLowerCase().includes(searchLower) ||
+        doctor.specialty.toLowerCase().includes(searchLower) ||
+        doctor.treats.some(ill => ill.toLowerCase().includes(searchLower));
         
-      return matchesIllness && matchesSearch;
+      return matchesSpecialty && matchesSearch;
     });
-  }, [searchTerm, selectedIllness]);
+
+    if (limit) {
+      result = result.slice(0, limit);
+    }
+    return result;
+  }, [searchTerm, selectedSpecialty, limit]);
 
   return (
-    <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white" id="doctors">
+    <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50 border-y border-gray-100" id="doctors">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--color-brand-navy)] mb-4">Agra Doctor Directory</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto text-lg">Find the best specialists in your area for your specific health concerns.</p>
+        <div className="text-center mb-10 sm:mb-12">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--color-brand-navy)] mb-4">
+            {hideFilters ? "Our Top Doctors" : "Find Doctors in Agra"}
+          </h2>
+          <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+            Consult the best specialists in your area for your specific health concerns.
+          </p>
         </div>
 
         {/* Search and Filter Controls */}
-        <div className="max-w-3xl mx-auto mb-12 flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-grow">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
+        {!hideFilters && (
+          <div className="max-w-4xl mx-auto mb-12 flex flex-col space-y-6">
+            <div className="relative w-full shadow-sm rounded-xl overflow-hidden">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search doctors by name, specialty, or condition..."
+                className="block w-full pl-11 pr-4 py-4 border-0 ring-1 ring-inset ring-gray-200 bg-white text-gray-900 focus:ring-2 focus:ring-inset focus:ring-[var(--color-brand-green)] sm:text-base sm:leading-6 transition-all"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-            <input
-              type="text"
-              placeholder="Search by illness, symptom, or location..."
-              className="block w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-green)] focus:bg-white transition-all shadow-sm"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
 
-          <div className="relative w-full sm:w-72">
-            <button
-              className="w-full flex items-center justify-between text-left px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-green)] focus:bg-white transition-all shadow-sm"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            >
-              <span className="truncate flex-grow">
-                {selectedIllness === "All" ? "Find doctors by illness or problem" : selectedIllness}
-              </span>
-              <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
-            </button>
-            
-            <AnimatePresence>
-              {isDropdownOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute z-20 w-full mt-2 bg-white rounded-xl shadow-lg border border-gray-100 py-1 max-h-60 overflow-y-auto"
-                >
+            {/* Specialty Pills Row */}
+            <div className="flex overflow-x-auto pb-2 space-x-2 scrollbar-hide snap-x" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+              {specialties.map((specialty) => {
+                const isActive = selectedSpecialty === specialty;
+                return (
                   <button
-                    className="w-full text-left px-4 py-2 hover:bg-green-50 hover:text-[var(--color-brand-green)] transition-colors text-sm font-medium"
-                    onClick={() => { setSelectedIllness("All"); setIsDropdownOpen(false); }}
+                    key={specialty}
+                    onClick={() => setSelectedSpecialty(specialty)}
+                    className={`snap-center shrink-0 px-4 py-2 rounded-full font-medium text-sm transition-all border-2 ${
+                      isActive
+                        ? "bg-[#DCFCE7] border-[#16A34A] text-[#15803D]"
+                        : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+                    }`}
                   >
-                    All Illnesses & Problems
+                    {specialty}
                   </button>
-                  {commonIllnesses.map(illness => (
-                    <button
-                      key={illness}
-                      className="w-full text-left px-4 py-2 hover:bg-green-50 hover:text-[var(--color-brand-green)] transition-colors text-sm font-medium"
-                      onClick={() => { setSelectedIllness(illness); setIsDropdownOpen(false); }}
-                    >
-                      {illness}
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Doctor Cards Grid */}
         <motion.div 
@@ -103,86 +93,86 @@ export default function DoctorDirectory() {
           <AnimatePresence>
             {filteredDoctors.map((doctor) => (
               <motion.div
-                key={doctor.id}
+                key={doctor.slug}
                 layout
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
+                exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
                 className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col group"
               >
                 {/* Visual Header / Banner */}
-                <div className="h-20 bg-gradient-to-r from-blue-50 to-green-50 relative">
-                  {/* Selected Illness Recommendation Badge */}
-                  {selectedIllness !== "All" && doctor.illnessesTreated.includes(selectedIllness) && (
-                    <div className="absolute top-4 left-4 bg-[var(--color-brand-green)] text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm flex items-center">
+                <div className="h-20 bg-gradient-to-r from-emerald-50 to-teal-50 relative border-b border-gray-50">
+                  {selectedSpecialty !== "All" && doctor.specialty === selectedSpecialty && (
+                    <div className="absolute top-4 left-4 bg-[var(--color-brand-green)] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
                       <Stethoscope size={14} className="mr-1.5" />
-                      Recommended for {selectedIllness}
+                      Specialist Match
                     </div>
                   )}
                 </div>
                 
                 {/* Avatar overlapping banner */}
-                <div className="px-6 relative flex justify-end">
-                   <div className="absolute -top-12 left-6 w-20 h-20 rounded-2xl bg-white p-1 shadow-md border border-gray-100 flex items-center justify-center transform group-hover:scale-105 transition-transform overflow-hidden">
-                      {doctor.imageSrc ? (
-                        <img 
-                          src={doctor.imageSrc} 
+                <div className="px-6 relative flex justify-between items-end -mt-10">
+                   <div className="w-20 h-20 rounded-2xl bg-white p-1 shadow-md border border-gray-100 flex items-center justify-center transform group-hover:scale-105 transition-transform overflow-hidden shrink-0 z-10">
+                       <img 
+                          src={doctor.photo} 
                           alt={doctor.name} 
                           className="w-full h-full object-cover rounded-xl"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(doctor.name)}&background=E8F5F0&color=1D9E75`;
+                          }}
                         />
-                      ) : (
-                        <div className="w-full h-full bg-blue-100 rounded-xl text-blue-600 flex items-center justify-center">
-                           <span className="text-xl font-bold">+</span>
-                        </div>
-                      )}
                    </div>
                    
-                   {/* Book button on right side */}
-                   <button className="text-[var(--color-brand-green)] font-semibold text-sm hover:text-green-700 transition-colors mt-4">
+                   <button 
+                     onClick={() => router.push(`/book-doctor/${doctor.slug}`)}
+                     className="bg-white border-2 border-[var(--color-brand-green)] text-[var(--color-brand-green)] hover:bg-green-50 font-bold px-4 py-2 rounded-xl text-sm shadow-sm transition-colors mb-1 active:scale-95"
+                   >
                      Book Visit
                    </button>
                 </div>
 
                 {/* Card Content */}
-                <div className="p-6 pt-6 flex flex-col flex-grow">
-                  {/* Prominent Header Info */}
+                <div className="p-6 flex flex-col flex-grow">
                   <div className="mb-4">
-                    <h3 className="text-xl font-bold text-[var(--color-brand-navy)] mb-1">
+                    <h3 className="text-lg font-bold text-[var(--color-brand-navy)] mb-1 leading-tight">
                       {doctor.name}
                     </h3>
-                    <p className="text-[var(--color-brand-green)] font-medium text-sm">
+                    <p className="text-[var(--color-brand-green)] font-semibold text-sm">
                       {doctor.specialty}
                     </p>
                   </div>
 
                   {/* Location & Details */}
-                  <div className="space-y-3 mb-6 flex-grow">
+                  <div className="space-y-3 flex-grow">
                     <div className="flex items-start text-gray-600 text-sm">
-                      <MapPin size={18} className="mr-2.5 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <MapPin size={18} className="mr-2.5 text-gray-400 mt-0.5 shrink-0" />
                       <div className="flex flex-col">
-                        <span className="font-medium text-gray-800">{doctor.clinicLocation}</span>
-                        <span className="text-xs text-gray-500 mt-0.5">{doctor.timings}</span>
+                        <span className="font-medium text-gray-800">{doctor.area}</span>
+                        <span className="text-xs text-gray-500 mt-0.5 max-w-[200px] truncate" title={doctor.timings.join(", ")}>
+                          {doctor.timings[0]} - {doctor.timings[doctor.timings.length - 1]}
+                        </span>
                       </div>
                     </div>
                     
                     <div className="flex items-start text-gray-600 text-sm">
-                      <Activity size={18} className="mr-2.5 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <Activity size={18} className="mr-2.5 text-gray-400 mt-0.5 shrink-0" />
                       <div>
-                        <span className="text-xs text-gray-400 block mb-1 uppercase tracking-wider font-bold">Treats</span>
+                        <span className="text-xs text-gray-400 block mb-1.5 uppercase tracking-wider font-bold">Treats</span>
                         <div className="flex flex-wrap gap-1.5">
-                          {doctor.illnessesTreated.map(illness => (
+                          {doctor.treats.slice(0, 3).map(illness => (
                             <span 
                               key={illness} 
-                              className={`text-xs px-2.5 py-1 rounded-full ${
-                                illness === selectedIllness 
-                                  ? 'bg-[var(--color-brand-green)] text-white font-bold shadow-sm' 
-                                  : 'bg-[#1a9c51]/10 text-[#1a9c51] font-medium border border-[#1a9c51]/20'
-                              }`}
+                              className="text-[10px] px-2 py-0.5 rounded border border-gray-200 bg-gray-50 text-gray-600 font-medium whitespace-nowrap"
                             >
                               {illness}
                             </span>
                           ))}
+                          {doctor.treats.length > 3 && (
+                            <span className="text-[10px] px-2 py-0.5 rounded border border-gray-200 bg-gray-50 text-gray-600 font-medium">
+                              +{doctor.treats.length - 3} more
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -194,17 +184,31 @@ export default function DoctorDirectory() {
         </motion.div>
 
         {filteredDoctors.length === 0 && (
-          <div className="text-center py-12">
-            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-               <Search className="h-8 w-8 text-gray-400" />
+          <div className="text-center py-16 bg-white rounded-3xl mt-6 border border-gray-100">
+            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+               <Search className="h-6 w-6 text-gray-400" />
             </div>
             <h3 className="text-lg font-bold text-gray-900 mb-2">No doctors found</h3>
-            <p className="text-gray-500 max-w-sm mx-auto">We couldn't find any specialists matching your current search criteria. Try clearing some filters.</p>
-            <button 
-              onClick={() => { setSearchTerm(""); setSelectedIllness("All"); }}
-              className="mt-6 px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-lg transition-colors"
+            <p className="text-gray-500 max-w-sm mx-auto">We couldn't find any specialists matching your current search criteria.</p>
+            {!hideFilters && (
+              <button 
+                onClick={() => { setSearchTerm(""); setSelectedSpecialty("All"); }}
+                className="mt-6 px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg transition-colors"
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* View All Button for Homepage */}
+        {limit && hideFilters && (
+          <div className="mt-10 sm:mt-12 text-center">
+            <button
+              onClick={() => router.push("/doctors")}
+              className="inline-flex items-center justify-center px-8 py-3.5 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-colors shadow-md hover:shadow-lg active:scale-95"
             >
-              Clear Filters
+              <span>View All Doctors →</span>
             </button>
           </div>
         )}

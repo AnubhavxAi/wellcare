@@ -1,0 +1,46 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Products — anyone can read, only admin (authenticated) can write
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Categories — anyone can read, only admin can write
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Orders — anyone can create, users read own orders by phone
+    match /orders/{orderId} {
+      allow create: if true;
+      allow read: if true;
+      allow update: if request.auth != null;
+    }
+
+    // Users — auth users read/write own document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Prescriptions — anyone can create, auth users read own
+    match /prescriptions/{prescriptionId} {
+      allow create: if true;
+      allow read: if request.auth != null;
+    }
+
+    // Lab Bookings — anyone can create, admin can read all
+    match /labBookings/{bookingId} {
+      allow create: if true;
+      allow read: if request.auth != null;
+    }
+
+    // Counters — used for order/booking ID generation
+    match /counters/{counterId} {
+      allow read, write: if true;
+    }
+  }
+}

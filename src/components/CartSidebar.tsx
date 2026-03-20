@@ -5,6 +5,7 @@ import { X, Plus, Minus, ShoppingBag } from "lucide-react";
 import { useState } from "react";
 import CheckoutModal from "./CheckoutModal";
 import PincodeValidator from "./PincodeValidator";
+import ProductIllustration from "./ProductIllustration";
 import { useCart } from "@/context/CartContext";
 
 export default function CartSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -67,6 +68,9 @@ export default function CartSidebar({ isOpen, onClose }: { isOpen: boolean; onCl
                 ) : (
                   cartItems.map((item) => (
                     <div key={item.id} className="flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-100">
+                      <div className="w-12 h-12 shrink-0 mr-3 rounded-md overflow-hidden bg-white border border-gray-200">
+                        <ProductIllustration category={item.category || "default"} name={item.name} />
+                      </div>
                       <div className="flex-1 pr-4">
                         <h3 className="font-semibold text-gray-900 truncate">{item.name}</h3>
                         <p className="text-[var(--color-brand-green)] font-bold mt-1">₹{item.price}</p>

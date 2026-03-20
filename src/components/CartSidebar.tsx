@@ -46,7 +46,7 @@ export default function CartSidebar({ isOpen, onClose }: { isOpen: boolean; onCl
               animate={{ opacity: 0.5 }}
               exit={{ opacity: 0 }}
               onClick={onClose}
-              className="fixed inset-0 bg-black z-50"
+              className="fixed inset-0 bg-black z-40"
             />
 
             {/* Sidebar */}
@@ -55,10 +55,10 @@ export default function CartSidebar({ isOpen, onClose }: { isOpen: boolean; onCl
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 h-full w-full sm:w-[400px] bg-white z-50 shadow-2xl flex flex-col"
+              className="fixed top-0 right-0 h-full w-full sm:w-[400px] bg-white z-50 shadow-2xl flex flex-col overflow-hidden"
             >
               {/* Header */}
-              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white">
+              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white flex-shrink-0">
                 <div className="flex items-center space-x-2 text-[var(--color-brand-navy)]">
                   <ShoppingBag size={24} />
                   <h2 className="text-xl font-bold">Your Cart</h2>
@@ -119,7 +119,7 @@ export default function CartSidebar({ isOpen, onClose }: { isOpen: boolean; onCl
 
               {/* Footer / Total */}
               {cartItems.length > 0 && (
-                <div className="border-t border-gray-100 p-6 bg-white shrink-0 space-y-4">
+                <div className="border-t border-gray-100 p-6 bg-white flex-shrink-0 space-y-4">
                   <PincodeValidator onValidationChange={setIsPincodeValid} />
                   
                   <div className="flex justify-between items-center py-2">
@@ -132,7 +132,7 @@ export default function CartSidebar({ isOpen, onClose }: { isOpen: boolean; onCl
                     className={`w-full py-4 rounded-xl font-bold text-lg transition-all shadow-md flex justify-center items-center ${
                       isPincodeValid 
                         ? "bg-[var(--color-brand-green)] text-white hover:bg-opacity-90 hover:shadow-lg" 
-                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        : "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
                     }`}
                   >
                     Proceed to Checkout

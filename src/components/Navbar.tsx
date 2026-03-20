@@ -59,7 +59,7 @@ export default function Navbar() {
 
   return (
     <header
-      className={`bg-white/95 backdrop-blur-md fixed w-full top-0 z-[50] h-16 transition-shadow duration-300 ${
+      className={`bg-white/95 backdrop-blur-md fixed w-full top-0 z-[30] h-16 transition-shadow duration-300 ${
         isScrolled ? "shadow-md" : "shadow-sm"
       }`}
     >

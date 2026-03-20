@@ -1,25 +1,35 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import * as twilio from "twilio";
+import twilio = require("twilio");
 
 admin.initializeApp();
 
-// Twilio credentials from legacy environment variables
-// Set these using: npx firebase-tools functions:config:set twilio.sid="AC..." twilio.token="token..." twilio.verify_sid="VA..."
-const twilioSid = functions.config().twilio?.sid;
-const twilioToken = functions.config().twilio?.token;
-const verifySid = functions.config().twilio?.verify_sid;
-const fromNumber = functions.config().twilio?.from || "whatsapp:+14155238886"; // Twilio Sandbox
-const toNumber = functions.config().twilio?.to || "whatsapp:+919897397532"; // Wellcare Admin
+// Twilio settings (shared)
+const getTwilioClient = () => {
+  const accountSid = functions.config().twilio.account_sid;
+  const authToken  = functions.config().twilio.auth_token;
+  const verifySid  = functions.config().twilio.verify_sid;
 
-const client = twilioSid && twilioToken ? twilio(twilioSid, twilioToken) : null;
+  if (!accountSid || !authToken || !verifySid) {
+    console.error("Twilio credentials missing from functions.config()");
+    throw new functions.https.HttpsError(
+      "internal",
+      "Service configuration error. Please contact support."
+    );
+  }
+  return { client: twilio(accountSid, authToken), verifySid };
+};
+
+const getFromToNumbers = () => {
+  const fromNumber = functions.config().twilio.from || "whatsapp:+14155238886"; // Twilio Sandbox
+  const toNumber = functions.config().twilio.to || "whatsapp:+919897397532"; // Wellcare Admin
+  return { fromNumber, toNumber };
+};
 
 async function sendWhatsApp(message: string) {
-  if (!client) {
-    console.warn("Twilio credentials not set. Message not sent:", message);
-    return;
-  }
   try {
+    const { client } = getTwilioClient();
+    const { fromNumber, toNumber } = getFromToNumbers();
     await client.messages.create({
       body: message,
       from: fromNumber,
@@ -36,9 +46,9 @@ async function sendWhatsApp(message: string) {
  */
 export const newOrderAlert = functions.firestore
   .document("orders/{orderId}")
-  .onCreate(async (snapshot, context) => {
+  .onCreate(async (snapshot) => {
     const order = snapshot.data();
-    const items = order.items
+    const items = (order.items || [])
       .map((i: any) => `${i.qty}x ${i.name}`)
       .join(", ");
 
@@ -61,7 +71,7 @@ Open Admin: wellcare-pharmacy-76524.web.app/admin`;
  */
 export const newLabBookingAlert = functions.firestore
   .document("labBookings/{bookingId}")
-  .onCreate(async (snapshot, context) => {
+  .onCreate(async (snapshot) => {
     const booking = snapshot.data();
 
     const message = `🧪 *New Lab Test Booking!*
@@ -82,7 +92,7 @@ export const newLabBookingAlert = functions.firestore
  */
 export const newPrescriptionAlert = functions.firestore
   .document("prescriptions/{docId}")
-  .onCreate(async (snapshot, context) => {
+  .onCreate(async (snapshot) => {
     const rx = snapshot.data();
 
     const message = `📄 *New Prescription Uploaded!*
@@ -101,7 +111,7 @@ Please review and call the customer.`;
 export const sendOtp = functions.https.onCall(async (data, context) => {
   const { phoneNumber } = data;
 
-  // Validate Indian phone number
+  // Validate Indian phone number format
   const phoneRegex = /^\+91[6-9]\d{9}$/;
   if (!phoneRegex.test(phoneNumber)) {
     throw new functions.https.HttpsError(
@@ -110,9 +120,7 @@ export const sendOtp = functions.https.onCall(async (data, context) => {
     );
   }
 
-  if (!client || !verifySid) {
-    throw new functions.https.HttpsError("failed-precondition", "Twilio credentials not configured.");
-  }
+  const { client, verifySid } = getTwilioClient();
 
   try {
     await client.verify.v2
@@ -121,20 +129,35 @@ export const sendOtp = functions.https.onCall(async (data, context) => {
         to: phoneNumber,
         channel: "sms",
       });
-    return { success: true, message: "OTP sent successfully." };
+
+    console.log(`OTP sent successfully to ${phoneNumber}`);
+    return { success: true };
+
   } catch (error: any) {
-    throw new functions.https.HttpsError("internal", error.message);
+    console.error("Twilio sendOtp error:", error.message, error.code);
+
+    // Map Twilio error codes to user-friendly messages
+    const errorMessages: Record<string, string> = {
+      "20003": "Authentication failed. Please contact support.",
+      "20404": "Service not found. Please contact support.",
+      "21211": "Invalid phone number format.",
+      "60200": "Invalid phone number.",
+      "60203": "Max OTP attempts reached. Try again in 10 minutes.",
+      "60212": "Too many requests. Please wait a few minutes.",
+    };
+
+    const userMessage = errorMessages[String(error.code)] 
+      || "Failed to send OTP. Please try again.";
+
+    throw new functions.https.HttpsError("internal", userMessage);
   }
 });
 
 export const verifyOtp = functions.https.onCall(async (data, context) => {
   const { phoneNumber, code, name } = data;
 
-  if (!client || !verifySid) {
-    throw new functions.https.HttpsError("failed-precondition", "Twilio credentials not configured.");
-  }
+  const { client, verifySid } = getTwilioClient();
 
-  // Step 1: Check OTP with Twilio
   let verificationCheck;
   try {
     verificationCheck = await client.verify.v2
@@ -144,26 +167,27 @@ export const verifyOtp = functions.https.onCall(async (data, context) => {
         code: code,
       });
   } catch (error: any) {
-    throw new functions.https.HttpsError("internal", error.message);
-  }
-
-  // Step 2: If OTP wrong or expired
-  if (verificationCheck.status !== "approved") {
+    console.error("Twilio verifyOtp error:", error.message);
     throw new functions.https.HttpsError(
-      "unauthenticated",
-      "Invalid or expired OTP. Please try again."
+      "internal",
+      "OTP verification failed. Please try again."
     );
   }
 
-  // Step 3: OTP is correct — create or find user in Firestore
+  if (verificationCheck.status !== "approved") {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "Incorrect OTP. Please check and try again."
+    );
+  }
+
+  // OTP correct — create or update user in Firestore
   const db = admin.firestore();
   const userRef = db.collection("users").doc(phoneNumber);
   const userSnap = await userRef.get();
-
   const isNewUser = !userSnap.exists;
 
   if (isNewUser) {
-    // Register new user
     await userRef.set({
       phone: phoneNumber,
       name: name || "",
@@ -173,16 +197,17 @@ export const verifyOtp = functions.https.onCall(async (data, context) => {
       orderCount: 0,
     });
   } else {
-    // Update last login time
     await userRef.update({
       lastLogin: admin.firestore.FieldValue.serverTimestamp(),
+      ...(name && { name }),
     });
   }
 
-  // Step 4: Create a custom Firebase Auth token
-  const customToken = await admin.auth().createCustomToken(phoneNumber, {
-    phone: phoneNumber,
-  });
+  // Create custom Firebase auth token
+  const customToken = await admin.auth().createCustomToken(
+    phoneNumber.replace("+", ""), 
+    { phone: phoneNumber }
+  );
 
   return {
     success: true,
@@ -190,7 +215,7 @@ export const verifyOtp = functions.https.onCall(async (data, context) => {
     customToken,
     user: {
       phone: phoneNumber,
-      name: isNewUser ? (name || "") : userSnap.data()?.name,
+      name: isNewUser ? (name || "") : (userSnap.data()?.name || ""),
     },
   };
 });

@@ -13,20 +13,6 @@ interface AuthModalProps {
   onClose: () => void;
 }
 
-const ERROR_MESSAGES: Record<string, string> = {
-  "60200": "Invalid phone number. Check and try again.",
-  "60203": "Maximum OTP attempts reached. Try again in 10 minutes.",
-  "60212": "Too many requests. Please wait a few minutes.",
-  "60202": "OTP has expired. Click Resend to get a new one.",
-};
-
-const getErrorMessage = (err: any): string => {
-  const msg = err?.message || "";
-  for (const code of Object.keys(ERROR_MESSAGES)) {
-    if (msg.includes(code)) return ERROR_MESSAGES[code];
-  }
-  return "Something went wrong. Please try again.";
-};
 
 export default function AuthModal({ onSuccess, onClose }: AuthModalProps) {
   const { user, setUser } = useAuth();
@@ -82,7 +68,9 @@ export default function AuthModal({ onSuccess, onClose }: AuthModalProps) {
       setScreen("otp");
       startCountdown(30);
     } catch (err: any) {
-      setError(getErrorMessage(err));
+      const message = err?.message || err?.details || "Failed to send OTP. Please try again.";
+      setError(message);
+      console.error("sendOtp error:", err);
     } finally {
       setLoading(false);
     }
@@ -119,7 +107,9 @@ export default function AuthModal({ onSuccess, onClose }: AuthModalProps) {
         onSuccess();
       }
     } catch (err: any) {
-      setError(getErrorMessage(err));
+      const message = err?.message || err?.details || "OTP verification failed. Please try again.";
+      setError(message);
+      console.error("verifyOtp error:", err);
       triggerShake();
     } finally {
       setLoading(false);

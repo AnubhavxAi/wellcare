@@ -11,7 +11,6 @@ const navLinks = [
   { name: "Home", href: "#" },
   { name: "Medicines", href: "#categories" },
   { name: "Lab Tests", href: "#lab-tests" },
-  { name: "Doctors", href: "#doctors" },
   { name: "Offers", href: "#" },
   { name: "Upload Rx", href: "#prescription-upload" },
 ];

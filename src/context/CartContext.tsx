@@ -7,12 +7,13 @@ export interface CartItem {
   name: string;
   price: number;
   quantity: number;
+  imageUrl?: string;
   category?: string;
 }
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (product: { id: string; name: string; price: number; category?: string }) => void;
+  addToCart: (product: { id: string; name: string; price: number; imageUrl?: string; category?: string }) => void;
   updateQuantity: (id: string, delta: number) => void;
   clearCart: () => void;
   totalItems: number;
@@ -63,7 +64,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [cartItems, isHydrated]);
 
-  const addToCart = (product: { id: string; name: string; price: number; category?: string }) => {
+  const addToCart = (product: { id: string; name: string; price: number; imageUrl?: string; category?: string }) => {
     setCartItems((prev) => {
       const existing = prev.find((item) => item.id === product.id);
       if (existing) {

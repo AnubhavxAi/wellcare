@@ -14,7 +14,6 @@ const quickLinks = [
   { name: "Home", href: "#" },
   { name: "Shop Medicines", href: "#categories" },
   { name: "Lab Tests", href: "#lab-tests" },
-  { name: "Doctor Directory", href: "#doctors" },
   { name: "Upload Prescription", href: "#prescription-upload" },
   { name: "Health Blog", href: "#blog" },
 ];

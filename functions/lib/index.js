@@ -1,15 +1,16 @@
 "use strict";
-var _a, _b, _c, _d;
+var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.newPrescriptionAlert = exports.newLabBookingAlert = exports.newOrderAlert = void 0;
+exports.verifyOtp = exports.sendOtp = exports.newPrescriptionAlert = exports.newLabBookingAlert = exports.newOrderAlert = void 0;
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const twilio = require("twilio");
 admin.initializeApp();
 const twilioSid = (_a = functions.config().twilio) === null || _a === void 0 ? void 0 : _a.sid;
 const twilioToken = (_b = functions.config().twilio) === null || _b === void 0 ? void 0 : _b.token;
-const fromNumber = ((_c = functions.config().twilio) === null || _c === void 0 ? void 0 : _c.from) || "whatsapp:+14155238886";
-const toNumber = ((_d = functions.config().twilio) === null || _d === void 0 ? void 0 : _d.to) || "whatsapp:+919897397532";
+const verifySid = (_c = functions.config().twilio) === null || _c === void 0 ? void 0 : _c.verify_sid;
+const fromNumber = ((_d = functions.config().twilio) === null || _d === void 0 ? void 0 : _d.from) || "whatsapp:+14155238886";
+const toNumber = ((_e = functions.config().twilio) === null || _e === void 0 ? void 0 : _e.to) || "whatsapp:+919897397532";
 const client = twilioSid && twilioToken ? twilio(twilioSid, twilioToken) : null;
 async function sendWhatsApp(message) {
     if (!client) {
@@ -74,5 +75,80 @@ exports.newPrescriptionAlert = functions.firestore
 ------------------------
 Please review and call the customer.`;
     await sendWhatsApp(message);
+});
+exports.sendOtp = functions.https.onCall(async (data, context) => {
+    const { phoneNumber } = data;
+    const phoneRegex = /^\+91[6-9]\d{9}$/;
+    if (!phoneRegex.test(phoneNumber)) {
+        throw new functions.https.HttpsError("invalid-argument", "Please enter a valid 10-digit Indian mobile number.");
+    }
+    if (!client || !verifySid) {
+        throw new functions.https.HttpsError("failed-precondition", "Twilio credentials not configured.");
+    }
+    try {
+        await client.verify.v2
+            .services(verifySid)
+            .verifications.create({
+            to: phoneNumber,
+            channel: "sms",
+        });
+        return { success: true, message: "OTP sent successfully." };
+    }
+    catch (error) {
+        throw new functions.https.HttpsError("internal", error.message);
+    }
+});
+exports.verifyOtp = functions.https.onCall(async (data, context) => {
+    var _a;
+    const { phoneNumber, code, name } = data;
+    if (!client || !verifySid) {
+        throw new functions.https.HttpsError("failed-precondition", "Twilio credentials not configured.");
+    }
+    let verificationCheck;
+    try {
+        verificationCheck = await client.verify.v2
+            .services(verifySid)
+            .verificationChecks.create({
+            to: phoneNumber,
+            code: code,
+        });
+    }
+    catch (error) {
+        throw new functions.https.HttpsError("internal", error.message);
+    }
+    if (verificationCheck.status !== "approved") {
+        throw new functions.https.HttpsError("unauthenticated", "Invalid or expired OTP. Please try again.");
+    }
+    const db = admin.firestore();
+    const userRef = db.collection("users").doc(phoneNumber);
+    const userSnap = await userRef.get();
+    const isNewUser = !userSnap.exists;
+    if (isNewUser) {
+        await userRef.set({
+            phone: phoneNumber,
+            name: name || "",
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            lastLogin: admin.firestore.FieldValue.serverTimestamp(),
+            addresses: [],
+            orderCount: 0,
+        });
+    }
+    else {
+        await userRef.update({
+            lastLogin: admin.firestore.FieldValue.serverTimestamp(),
+        });
+    }
+    const customToken = await admin.auth().createCustomToken(phoneNumber, {
+        phone: phoneNumber,
+    });
+    return {
+        success: true,
+        isNewUser,
+        customToken,
+        user: {
+            phone: phoneNumber,
+            name: isNewUser ? (name || "") : (_a = userSnap.data()) === null || _a === void 0 ? void 0 : _a.name,
+        },
+    };
 });
 //# sourceMappingURL=index.js.map

@@ -2,16 +2,38 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, Minus, ShoppingBag } from "lucide-react";
-import { useState } from "react";
-import CheckoutModal from "./CheckoutModal";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import PincodeValidator from "./PincodeValidator";
 import ProductIllustration from "./ProductIllustration";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CartSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { cartItems, updateQuantity, totalAmount, totalItems } = useCart();
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const { user, openLogin } = useAuth();
+  const router = useRouter();
   const [isPincodeValid, setIsPincodeValid] = useState(false);
+  const [pendingCheckout, setPendingCheckout] = useState(false);
+
+  useEffect(() => {
+    if (pendingCheckout && user?.isLoggedIn) {
+      setPendingCheckout(false);
+      onClose();
+      router.push("/checkout");
+    }
+  }, [user, pendingCheckout, router, onClose]);
+
+  const handleProceedToCheckout = () => {
+    if (!isPincodeValid) return;
+    if (!user?.isLoggedIn) {
+      setPendingCheckout(true);
+      openLogin();
+    } else {
+      onClose();
+      router.push("/checkout");
+    }
+  };
 
   return (
     <>
@@ -105,11 +127,7 @@ export default function CartSidebar({ isOpen, onClose }: { isOpen: boolean; onCl
                     <span className="text-2xl font-extrabold text-[var(--color-brand-navy)]">₹{totalAmount}</span>
                   </div>
                   <button 
-                    onClick={() => {
-                      if (isPincodeValid) {
-                        setIsCheckoutOpen(true);
-                      }
-                    }}
+                    onClick={handleProceedToCheckout}
                     disabled={!isPincodeValid}
                     className={`w-full py-4 rounded-xl font-bold text-lg transition-all shadow-md flex justify-center items-center ${
                       isPincodeValid 
@@ -125,17 +143,6 @@ export default function CartSidebar({ isOpen, onClose }: { isOpen: boolean; onCl
           </>
         )}
       </AnimatePresence>
-
-      <CheckoutModal 
-        isOpen={isCheckoutOpen} 
-        onClose={() => setIsCheckoutOpen(false)} 
-        onComplete={() => {
-          setIsCheckoutOpen(false);
-          onClose(); // Close the sidebar too
-        }}
-        cartItems={cartItems}
-        totalAmount={totalAmount}
-      />
     </>
   );
 }

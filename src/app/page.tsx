@@ -4,7 +4,6 @@ import Hero from "@/components/Hero";
 import TrustBadges from "@/components/TrustBadges";
 import ProductCategories from "@/components/ProductCategories";
 import LabTestBooking from "@/components/LabTestBooking";
-import DoctorDirectory from "@/components/DoctorDirectory";
 import PrescriptionUpload from "@/components/PrescriptionUpload";
 import HealthBlog from "@/components/HealthBlog";
 import Testimonials from "@/components/Testimonials";
@@ -21,8 +20,10 @@ export default function Home() {
         <Hero />
         <TrustBadges />
         <ProductCategories />
-        <DoctorDirectory limit={6} hideFilters={true} />
+        <HealthBlog />
         <LabTestBooking />
+        <PrescriptionUpload />
+        <LoyaltyBanner />
       </main>
       <Footer />
       <WhatsAppFAB />

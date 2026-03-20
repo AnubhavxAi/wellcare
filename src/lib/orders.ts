@@ -35,70 +35,58 @@ export interface Order {
   createdAt: Timestamp | ReturnType<typeof serverTimestamp>;
 }
 
-/**
- * Generates a human-readable order ID: WC-YYYYMMDD-XXX
- * Uses a Firestore counter document for daily auto-increment.
- */
-async function generateOrderId(): Promise<string> {
-  const now = new Date();
-  const dateStr =
-    now.getFullYear().toString() +
-    String(now.getMonth() + 1).padStart(2, "0") +
-    String(now.getDate()).padStart(2, "0");
+export async function placeOrder(cart: any[], customerInfo: any, user: any) {
+  const today = new Date();
+  const dateStr = today.toISOString().slice(0, 10).replace(/-/g, "");
 
-  const counterRef = doc(db, "counters", "orders");
+  const counterRef = doc(db, "orderCounters", dateStr);
+  
+  // Need to import getDoc, setDoc, increment if not imported at top
+  const { getDoc, setDoc, increment } = require("firebase/firestore");
+  
+  const counterSnap = await getDoc(counterRef);
+  const currentCount = counterSnap.exists() ? counterSnap.data().count + 1 : 1;
+  await setDoc(counterRef, { count: currentCount }, { merge: true });
 
-  const newCount = await runTransaction(db, async (transaction) => {
-    const counterDoc = await transaction.get(counterRef);
+  const orderId = `WC-${dateStr}-${String(currentCount).padStart(3, "0")}`;
 
-    if (!counterDoc.exists() || counterDoc.data().date !== dateStr) {
-      // New day — reset counter
-      transaction.set(counterRef, { date: dateStr, count: 1 });
-      return 1;
-    }
-
-    const current = counterDoc.data().count || 0;
-    transaction.update(counterRef, { count: current + 1 });
-    return current + 1;
-  });
-
-  return `WC-${dateStr}-${String(newCount).padStart(3, "0")}`;
-}
-
-/**
- * Places an order in Firestore.
- * Returns the generated orderId.
- */
-export async function placeOrder(
-  items: OrderItem[],
-  customerInfo: {
-    customerName: string;
-    phone: string;
-    address: string;
-    pincode: string;
-    paymentMethod: "COD" | "UPI" | "Card";
-    prescriptionUrl?: string;
-  }
-): Promise<string> {
-  const orderId = await generateOrderId();
-  const totalAmount = items.reduce((sum, item) => sum + item.price * item.qty, 0);
-
-  const order: Order = {
+  const orderData = {
     orderId,
-    customerName: customerInfo.customerName,
+    customerName: customerInfo.name,
     phone: customerInfo.phone,
-    address: customerInfo.address,
-    pincode: customerInfo.pincode,
-    items,
-    totalAmount,
+    email: customerInfo.email || "",
+    address: `${customerInfo.address1}, ${customerInfo.address2 || ""}, ${customerInfo.area}, Agra - ${customerInfo.pincode}`.trim(),
+    items: cart.map(item => ({
+      productId: item.id,
+      name: item.name,
+      qty: item.qty || item.quantity, // Support both depending on CartContext
+      price: item.price,
+      imageUrl: item.imageUrl || "",
+    })),
+    subtotal: cart.reduce((s: number, i: any) => s + i.price * (i.qty || i.quantity), 0),
+    deliveryCharge: cart.reduce((s: number, i: any) => s + i.price * (i.qty || i.quantity), 0) >= 499 ? 0 : 49,
+    totalAmount: cart.reduce((s: number, i: any) => s + i.price * (i.qty || i.quantity), 0) >= 499
+      ? cart.reduce((s: number, i: any) => s + i.price * (i.qty || i.quantity), 0)
+      : cart.reduce((s: number, i: any) => s + i.price * (i.qty || i.quantity), 0) + 49,
     paymentMethod: customerInfo.paymentMethod,
-    prescriptionUrl: customerInfo.prescriptionUrl || "",
     status: "pending",
+    userId: user?.phone || "guest",
     createdAt: serverTimestamp(),
   };
 
-  await addDoc(collection(db, "orders"), order);
-  return orderId;
+  const docRef = await addDoc(collection(db, "orders"), orderData);
+
+  if (user?.phone) {
+    const userRef = doc(db, "users", user.phone);
+    await updateDoc(userRef, { orderCount: increment(1) });
+  }
+
+  // Clear the cart from localStorage
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("wellcare_cart");
+  }
+
+  return { orderId, docId: docRef.id };
 }
 
 /**

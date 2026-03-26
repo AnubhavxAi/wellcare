@@ -16,9 +16,35 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Wellcare Pharmacy — Your Health, Delivered to Your Doorstep | Agra",
+  metadataBase: new URL("https://wellcare-pharmacy-76524.vercel.app"),
+  title: {
+    default: "Wellcare Pharmacy Agra — Medicine Delivery in 2 Hours",
+    template: "%s | Wellcare Pharmacy Agra",
+  },
   description:
-    "Order genuine medicines, consult top doctors, and book lab tests at home in Agra. Fast delivery, certified pharmacy, prescription upload. Wellcare Pharmacy, Arjun Nagar, Agra.",
+    "Order genuine medicines online and get them delivered to your doorstep in Agra within 2 hours. Prescription medicines, health devices, vitamins and more.",
+  keywords: [
+    "pharmacy agra",
+    "medicine delivery agra",
+    "online pharmacy agra",
+    "wellcare pharmacy",
+    "medicine home delivery agra",
+    "buy medicines online agra",
+    "medical store agra",
+  ],
+  authors: [{ name: "Wellcare Pharmacy" }],
+  creator: "Wellcare Pharmacy",
+  openGraph: {
+    type: "website",
+    locale: "en_IN",
+    url: "https://wellcare-pharmacy-76524.vercel.app",
+    siteName: "Wellcare Pharmacy Agra",
+    images: ["/logo.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
@@ -31,9 +57,9 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${poppins.variable} font-sans antialiased bg-white text-gray-900`}
       >
-        <CartProvider>
-          <AuthProvider>{children}</AuthProvider>
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>{children}</CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

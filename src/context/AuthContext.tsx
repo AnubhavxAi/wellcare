@@ -1,10 +1,10 @@
 "use client";
-import { createContext, useContext, useState, 
-         useEffect, ReactNode } from "react";
-import { onAuthStateChanged, signOut as firebaseSignOut } 
-  from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
+import {
+  createContext, useContext, useState,
+  useEffect, ReactNode
+} from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import AuthModal from "../components/AuthModal";
 
 interface AuthUser {
@@ -27,59 +27,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<AuthUser | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const router = useRouter();
 
-  // Listen to Firebase Auth state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser?.phoneNumber) {
-        // User is logged in — load their Firestore profile
-        try {
-          const userRef = doc(db, "users", firebaseUser.phoneNumber);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists()) {
-            setUserState({
-              phone: firebaseUser.phoneNumber,
-              name: userSnap.data().name || "",
-              isLoggedIn: true,
-            });
-          } else {
-            // Document might not exist yet if they just signed up 
-            // and the AuthModal hasn't finished setDoc
-            setUserState({
-              phone: firebaseUser.phoneNumber,
-              name: "",
-              isLoggedIn: true,
-            });
-          }
-        } catch (err) {
-          console.error("Error loading user profile:", err);
-          setUserState({
-            phone: firebaseUser.phoneNumber,
-            name: "",
-            isLoggedIn: true,
-          });
-        }
-      } else {
-        setUserState(null);
+    // Get current session on mount
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user?.phone) {
+        await loadUserProfile(session.user.phone);
       }
       setIsAuthLoading(false);
     });
-    return () => unsubscribe();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user?.phone) {
+          await loadUserProfile(session.user.phone);
+        } else {
+          setUserState(null);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const setUser = (u: AuthUser | null) => {
-    setUserState(u);
+  const loadUserProfile = async (phone: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("users")
+        .select("name, phone")
+        .eq("phone", phone)
+        .maybeSingle();
+
+      if (data) {
+        setUserState({
+          phone,
+          name: data.name || "",
+          isLoggedIn: true,
+        });
+      } else {
+        setUserState({
+          phone,
+          name: "",
+          isLoggedIn: true,
+        });
+      }
+    } catch (err) {
+      console.error("Error loading user profile:", err);
+      setUserState({
+        phone,
+        name: "",
+        isLoggedIn: true,
+      });
+    }
   };
 
   const logout = async () => {
-    await firebaseSignOut(auth);
+    await supabase.auth.signOut();
     setUserState(null);
   };
 
   return (
     <AuthContext.Provider value={{
       user,
-      setUser,
+      setUser: setUserState,
       logout,
       openLogin: () => setShowModal(true),
       isAuthLoading,
@@ -87,7 +99,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
       {showModal && (
         <AuthModal
-          onSuccess={() => setShowModal(false)}
+          onSuccess={() => {
+            setShowModal(false);
+            const redirectPath = localStorage.getItem("wellcare_redirect");
+            if (redirectPath) {
+              localStorage.removeItem("wellcare_redirect");
+              router.push(redirectPath);
+            }
+          }}
           onClose={() => setShowModal(false)}
         />
       )}

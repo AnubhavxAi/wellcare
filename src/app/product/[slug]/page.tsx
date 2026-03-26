@@ -19,20 +19,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   return {
-    title: `${product.name} | ${product.brand} | Wellcare Pharmacy Agra`,
-    description: `Buy ${product.name} online at Wellcare Pharmacy. ${product.description}. Genuine medicines and fast delivery in Arjun Nagar, Agra.`,
+    title: `${product.name} - Buy Online | Wellcare Pharmacy Agra`,
+    description: `Buy ${product.name} by ${product.brand} online at Wellcare Pharmacy in Agra. ₹${product.price}. ${product.description}`,
     openGraph: {
       title: product.name,
-      description: product.description,
+      description: product.description.slice(0, 160),
       images: [product.imageSrc],
+      type: "website",
+    },
+    alternates: {
+      canonical: `https://wellcare-pharmacy-76524.vercel.app/product/${product.slug}`,
     },
   };
 }
 
 export async function generateStaticParams() {
-  return allProducts.map((product) => ({
-    slug: product.slug,
-  }));
+  return []; // Vercel renders dynamically — no pre-generation needed
 }
 
 export default async function ProductDetailPage({ params }: Props) {

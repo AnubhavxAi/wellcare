@@ -8,10 +8,11 @@ import { placeOrder } from "@/lib/orders";
 import { motion } from "framer-motion";
 import { Loader2, ArrowRight, ShieldCheck, CreditCard } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import SmartProductImage from "@/components/SmartProductImage";
 
 export default function CheckoutPage() {
   const { user } = useAuth();
-  const { cartItems, totalAmount, clearCart } = useCart();
+  const { items, cartTotal, clearCart } = useCart();
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
@@ -31,10 +32,10 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     // If cart is empty, redirect to shop
-    if (cartItems.length === 0) {
+    if (items.length === 0) {
       router.push("/");
     }
-  }, [cartItems, router]);
+  }, [items, router]);
 
   useEffect(() => {
     if (user) {
@@ -58,10 +59,10 @@ export default function CheckoutPage() {
       return;
     }
     
-    // Validate Pincode
-    const pin = parseInt(formData.pincode);
-    if (isNaN(pin) || pin < 282001 || pin > 282010) {
-      setError("We currently only deliver to Agra pincodes (282001 - 282010).");
+    // Validate Pincode (Agra 282xxx)
+    const agraPin = /^282\d{3}$/;
+    if (!agraPin.test(formData.pincode)) {
+      setError("We currently only deliver to Agra (pincodes starting with 282).");
       return;
     }
 
@@ -69,7 +70,7 @@ export default function CheckoutPage() {
     setError("");
 
     try {
-      const result = await placeOrder(cartItems, formData, user);
+      const result = await placeOrder(items, formData);
       clearCart();
       router.push(`/order-success?id=${result.orderId}`);
     } catch (err: any) {
@@ -79,10 +80,10 @@ export default function CheckoutPage() {
     }
   };
 
-  const deliveryCharge = totalAmount >= 499 ? 0 : 49;
-  const finalTotal = totalAmount + deliveryCharge;
+  const deliveryCharge = cartTotal >= 499 ? 0 : 49;
+  const finalTotal = cartTotal + deliveryCharge;
 
-  if (cartItems.length === 0) return null;
+  if (items.length === 0) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -265,19 +266,21 @@ export default function CheckoutPage() {
               <h2 className="text-xl font-bold mb-4 text-gray-900 border-b pb-4">Order Summary</h2>
               
               <div className="max-h-80 overflow-y-auto space-y-4 mb-6 pr-2">
-                {cartItems.map((item) => (
+                {items.map((item) => (
                   <div key={item.id} className="flex items-start gap-4">
                     <div className="w-16 h-16 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                      {item.imageUrl ? (
-                        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="text-xs text-gray-400">Image</div>
-                      )}
+                      <SmartProductImage
+                        category={item.category}
+                        name={item.name}
+                        src={""} // Slugs to images logic remains in SmartProductImage
+                        size={64}
+                        className="w-full h-full"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-900 truncate" title={item.name}>{item.name}</p>
-                      <p className="text-xs text-gray-500 mt-1">Qty: {item.quantity}</p>
-                      <p className="text-sm font-bold text-[#16A34A] mt-1">₹{item.price * item.quantity}</p>
+                      <p className="text-xs text-gray-500 mt-1">Qty: {item.qty}</p>
+                      <p className="text-sm font-bold text-[#16A34A] mt-1">₹{item.price * item.qty}</p>
                     </div>
                   </div>
                 ))}
@@ -286,14 +289,14 @@ export default function CheckoutPage() {
               <div className="border-t border-gray-100 pt-4 space-y-3">
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Subtotal</span>
-                  <span className="font-medium text-gray-900">₹{totalAmount}</span>
+                  <span className="font-medium text-gray-900">₹{cartTotal}</span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Delivery Charge</span>
                   <span className="font-medium text-gray-900">{deliveryCharge === 0 ? <span className="text-green-600 font-bold">FREE</span> : `₹${deliveryCharge}`}</span>
                 </div>
                 {deliveryCharge > 0 && (
-                  <p className="text-xs text-green-600">Add ₹{499 - totalAmount} more to get FREE delivery.</p>
+                  <p className="text-xs text-green-600">Add ₹{499 - cartTotal} more to get FREE delivery.</p>
                 )}
                 
                 <div className="border-t border-dashed border-gray-200 mt-4 pt-4 flex justify-between items-center text-lg font-bold text-gray-900">

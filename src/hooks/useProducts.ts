@@ -1,110 +1,84 @@
-"use client";
-
 import { useState, useEffect } from "react";
-import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  orderBy,
-} from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { allProducts, type Product } from "@/data/products";
+import { supabase } from "@/lib/supabase";
+import { Product } from "@/types/database";
 
-interface UseProductsOptions {
-  category?: string;
-}
-
-interface UseProductsReturn {
-  products: Product[];
-  loading: boolean;
-  error: string | null;
-}
-
-/**
- * Hook that fetches products from Firestore in real-time.
- * Falls back to hardcoded data if Firestore is unavailable.
- */
-export function useProducts(options: UseProductsOptions = {}): UseProductsReturn {
-  const [products, setProducts] = useState<Product[]>(allProducts);
+export function useProducts(options: { category?: string; limit?: number } = {}) {
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [firestoreAvailable, setFirestoreAvailable] = useState(true);
 
   useEffect(() => {
-    // Build Firestore query
-    const productsRef = collection(db, "products");
-    let q;
+    async function fetchProducts() {
+      setLoading(true);
+      
+      let query = supabase
+        .from("products")
+        .select("*")
+        .eq("in_stock", true)
+        .order("name");
 
-    try {
       if (options.category && options.category !== "All") {
-        q = query(
-          productsRef,
-          where("category", "==", options.category),
-          where("inStock", "==", true)
-        );
-      } else {
-        q = query(productsRef, where("inStock", "==", true));
+        query = query.eq("category", options.category);
       }
-    } catch {
-      // If query construction fails, fall back
-      setTimeout(() => {
-        setProducts(allProducts);
-        setLoading(false);
-        setFirestoreAvailable(false);
-      }, 0);
-      return;
+
+      if (options.limit) {
+        query = query.limit(options.limit);
+      }
+
+      const { data, error: fetchError } = await query;
+
+      if (fetchError) {
+        setError(fetchError.message);
+      } else {
+        const mapped = (data || []).map(p => ({
+          ...p,
+          imageSrc: p.image_url,
+          rxRequired: p.requires_prescription,
+          originalPrice: p.mrp,
+          inStock: p.in_stock,
+          packSize: p.unit,
+        }));
+        setProducts(mapped);
+      }
+      setLoading(false);
     }
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        if (snapshot.empty && !firestoreAvailable) {
-          // No products in Firestore — use hardcoded fallback
-          setProducts(allProducts);
-        } else if (!snapshot.empty) {
-          const firestoreProducts = snapshot.docs.map((doc) => {
-            const data = doc.data();
-            return {
-              id: doc.id,
-              slug: data.slug || "",
-              name: data.name || "",
-              brand: data.brand || "",
-              price: data.price || 0,
-              originalPrice: data.mrp || data.originalPrice,
-              category: data.category || "",
-              description: data.description || "",
-              fullDescription: data.fullDescription || data.description || "",
-              imageSrc: data.imageUrl || data.imageSrc || "",
-              inStock: data.inStock !== false,
-              benefits: data.benefits || [],
-              howToUse: data.howToUse || [],
-              ingredients: data.ingredients || [],
-              form: data.form || "Tablet",
-              rxRequired: data.rxRequired || false,
-              packSize: data.packSize || "",
-            } as Product;
-          });
-          setProducts(firestoreProducts);
-          setFirestoreAvailable(true);
-        } else {
-          // Empty collection but Firestore is reachable — use hardcoded as fallback
-          setProducts(allProducts);
-        }
-        setLoading(false);
-        setError(null);
-      },
-      (err) => {
-        console.warn("Firestore unavailable, using local data:", err.message);
-        setProducts(allProducts);
-        setLoading(false);
-        setError(null); // Don't show error to user — graceful fallback
-        setFirestoreAvailable(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [options.category, firestoreAvailable]);
+    fetchProducts();
+  }, [options.category, options.limit]);
 
   return { products, loading, error };
+}
+
+export function useProduct(slug: string) {
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchProduct() {
+      if (!slug) return;
+      setLoading(true);
+      const { data } = await supabase
+        .from("products")
+        .select("*")
+        .eq("slug", slug)
+        .maybeSingle();
+
+      if (data) {
+        setProduct({
+          ...data,
+          imageSrc: data.image_url,
+          rxRequired: data.requires_prescription,
+          originalPrice: data.mrp,
+          inStock: data.in_stock,
+          packSize: data.unit,
+        });
+      } else {
+        setProduct(null);
+      }
+      setLoading(false);
+    }
+    fetchProduct();
+  }, [slug]);
+
+  return { product, loading };
 }

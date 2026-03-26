@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart, Menu, X, User, LogOut, ChevronDown } from "lucide-react";
-import CartSidebar from "./CartSidebar";
+import CartDrawer from "./CartDrawer";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 
@@ -17,12 +17,10 @@ const navLinks = [
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { totalItems } = useCart();
+  const { cartCount, openCart } = useCart();
   const { user, logout, openLogin } = useAuth();
 
   useEffect(() => {
@@ -160,17 +158,17 @@ export default function Navbar() {
 
             {/* Cart */}
             <button
-              onClick={() => setIsCartOpen(true)}
+              onClick={openCart}
               className="relative p-2 text-gray-700 hover:text-[var(--color-brand-green)] transition-colors"
             >
               <ShoppingCart size={22} />
-              {totalItems > 0 && (
+              {cartCount > 0 && (
                 <motion.span
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   className="absolute -top-0.5 -right-0.5 bg-[var(--color-brand-green)] text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center"
                 >
-                  {totalItems}
+                  {cartCount}
                 </motion.span>
               )}
             </button>
@@ -268,7 +266,7 @@ export default function Navbar() {
         )}
       </AnimatePresence>
 
-      <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      <CartDrawer />
     </header>
   );
 }

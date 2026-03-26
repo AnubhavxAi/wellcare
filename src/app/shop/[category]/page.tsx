@@ -1,23 +1,41 @@
 import React from "react";
+import { Metadata } from "next";
 import ShopPageClient from "../ShopPageClient";
 
-export function generateStaticParams() {
-  const categories = [
-    "medicines",
-    "personal-care",
-    "devices",
-    "nutrition",
-    "baby-care",
-    "ayurveda",
-    "homeopathy",
-    "supplements",
-    "healthcare",
-    "all",
-  ];
-  return categories.map((cat) => ({
-    category: cat,
-  }));
-} 
+export async function generateStaticParams() {
+  return []; // Vercel renders dynamically — no pre-generation needed
+}
+
+const categoryNames: Record<string, string> = {
+  medicines: "Medicines",
+  "personal-care": "Personal Care",
+  devices: "Medical Devices",
+  nutrition: "Nutrition",
+  "baby-care": "Baby Care",
+  ayurveda: "Ayurveda",
+  homeopathy: "Homeopathy",
+  supplements: "Vitamins & Supplements",
+  healthcare: "Healthcare",
+  skincare: "Skincare",
+  "pain-relief": "Pain Relief",
+  "first-aid": "First Aid",
+  "oral-care": "Oral Care",
+  all: "All Products",
+};
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ category: string }>;
+}): Promise<Metadata> {
+  const { category } = await params;
+  const name = categoryNames[category] || category;
+
+  return {
+    title: `${name} - Buy Online | Wellcare Pharmacy Agra`,
+    description: `Buy genuine ${name} online from Wellcare Pharmacy in Agra. Fast delivery across Agra city. 100% authentic products.`,
+  };
+}
 
 export default async function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
   // Convert URL slug to category name, e.g., "personal-care" -> "Personal Care"

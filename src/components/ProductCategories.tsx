@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
-import ProductIllustration from "@/components/ProductIllustration";
+import SmartProductImage from "@/components/SmartProductImage";
 import {
   allProducts as localProducts,
   categories,
@@ -101,9 +101,11 @@ function ProductCategoriesContent() {
                   >
                     {/* Product Image */}
                     <div className="w-full aspect-square bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden p-4">
-                      <ProductIllustration
+                      <SmartProductImage
                         category={product.category}
                         name={product.name}
+                        src={product.imageSrc}
+                        size={200}
                         className="w-full h-full group-hover:scale-105 transition-transform duration-300"
                       />
                       {product.originalPrice && (
@@ -159,7 +161,16 @@ function ProductCategoriesContent() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            addToCart(product);
+                            addToCart({
+                              id: product.id,
+                              name: product.name,
+                              brand: product.brand,
+                              price: product.price,
+                              mrp: product.originalPrice || product.price,
+                              category: product.category,
+                              unit: product.packSize || "1 unit",
+                              slug: product.slug,
+                            });
                           }}
                           disabled={!product.inStock}
                           className="w-full bg-[var(--color-brand-green)] hover:bg-emerald-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-200 text-white font-bold py-3 rounded-xl transition-all shadow-sm active:scale-95 flex items-center justify-center space-x-2"

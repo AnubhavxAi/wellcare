@@ -17,7 +17,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { Product, allProducts, categoryIcons } from "@/data/products";
 import { useCart } from "@/context/CartContext";
-import ProductIllustration from "@/components/ProductIllustration";
+import SmartProductImage from "@/components/SmartProductImage";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -55,9 +55,11 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
             {/* Left Column: Image Section */}
             <div className="space-y-6">
               <div className="aspect-square rounded-3xl bg-gray-50 border border-gray-100 p-8 relative flex items-center justify-center group">
-                <ProductIllustration 
+                <SmartProductImage 
                   category={product.category}
                   name={product.name}
+                  src={product.imageSrc}
+                  size={320}
                   className="w-full h-full"
                 />
                 {discount > 0 && (
@@ -147,7 +149,18 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   
                   <button 
                     onClick={() => {
-                      for(let i=0; i<quantity; i++) addToCart(product);
+                      for(let i=0; i<quantity; i++) {
+                        addToCart({
+                          id: product.id,
+                          name: product.name,
+                          brand: product.brand,
+                          price: product.price,
+                          mrp: product.originalPrice || product.price,
+                          category: product.category,
+                          unit: product.packSize || "1 unit",
+                          slug: product.slug,
+                        });
+                      }
                     }}
                     disabled={!product.inStock}
                     className="flex-grow bg-[var(--color-brand-green)] hover:bg-emerald-700 disabled:bg-gray-200 text-white font-bold py-4 rounded-xl transition-all shadow-lg flex items-center justify-center space-x-2 active:scale-95"
@@ -292,7 +305,13 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-lg transition-all text-center group"
                 >
                   <div className="aspect-square bg-gray-50 rounded-xl mb-4 overflow-hidden p-4 flex items-center justify-center">
-                    <ProductIllustration category={p.category} name={p.name} className="w-full h-full group-hover:scale-110 transition-transform duration-300" />
+                    <SmartProductImage 
+                      category={p.category} 
+                      name={p.name} 
+                      src={p.imageSrc} 
+                      size={120} 
+                      className="w-full h-full group-hover:scale-110 transition-transform duration-300" 
+                    />
                   </div>
                   <h4 className="font-bold text-gray-900 text-sm line-clamp-1 mb-1 group-hover:text-[var(--color-brand-green)] transition-colors">{p.name}</h4>
                   <div className="flex items-center justify-center space-x-2">

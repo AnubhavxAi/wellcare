@@ -1,54 +1,41 @@
-# Wellcare Pharmacy — Backend Setup Guide
+# Wellcare Pharmacy — Backend Setup Guide (Supabase)
 
-This project uses **Firebase** for Authentication, Firestore (Database), Storage, and Cloud Functions (WhatsApp Alerts).
+This project has been migrated from Firebase to **Supabase** for Authentication, Database, Storage, and Real-time updates.
 
-## 1. Firebase Project Setup
-1. Go to [Firebase Console](https://console.firebase.google.com/).
-2. Create a new project: `wellcare-pharmacy-76524`.
-3. Enable **Authentication** and turn on **Phone Auth**.
-4. Enable **Firestore Database** in **Native Mode**.
-5. Enable **Cloud Storage**.
-6. Switch to **Blaze Plan** (required for Cloud Functions and SMS OTP).
+## 1. Supabase Project Setup
+1. Go to [Supabase Console](https://supabase.com/).
+2. Create a new project: `wellcare-pharmacy`.
+3. Go to **SQL Editor** and run the schema provided in the [setup_guide.md](file:///C:/Users/siddh/.gemini/antigravity/brain/7dc28dbb-7275-4e48-8385-93e291b81ec3/setup_guide.md).
+4. Go to **Storage** and create a private bucket named `prescriptions`.
 
 ## 2. Environment Variables
-Create a `.env.local` file in the root with the following values from your Firebase Project Settings:
+Create or update your `.env.local` file in the `wellcare` root with these values:
 ```env
-NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=wellcare-pharmacy-76524.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=wellcare-pharmacy-76524
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=wellcare-pharmacy-76524.firebasestorage.app
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
-NEXT_PUBLIC_ADMIN_PASSWORD=your_secure_admin_password
+NEXT_PUBLIC_SUPABASE_URL=your_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+NEXT_PUBLIC_ADMIN_PASSWORD=your_admin_password
+TWILIO_ACCOUNT_SID=your_sid
+TWILIO_AUTH_TOKEN=your_token
+TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
 ## 3. Database Seeding
-To populate your Firestore with products and categories:
-1. Download `service-account.json` from **Project Settings > Service Accounts**.
-2. Place it in the project root.
-3. Run the following commands:
+To populate your Supabase database with products:
+1. Open your terminal in the **`wellcare`** folder:
 ```bash
-npm run seed-categories
-npm run seed-products
+cd e:/project01/wellcare
+```
+2. Run the seeding shortcut:
+```bash
+npm run seed-supabase
 ```
 
-## 4. Cloud Functions (WhatsApp Alerts)
-1. Initialize Twilio credentials in Firebase Config:
-```bash
-firebase functions:config:set twilio.sid="YOUR_SID" twilio.token="YOUR_TOKEN" twilio.from="whatsapp:+14155238886" twilio.to="whatsapp:+919897397532"
-```
-2. Deploy functions:
-```bash
-firebase deploy --only functions
-```
+## 4. API Routes (Serverless)
+The project now uses Next.js API routes (in `src/app/api/`) instead of Firebase Cloud Functions. These are deployed automatically when you push to Vercel.
 
-## 5. Security Rules & Indexes
-Deploy Firestore/Storage rules and indexes:
-```bash
-firebase deploy --only firestore,storage
-```
-
-## 6. Admin Dashboard
-Access the order management dashboard at:
-`https://wellcare-pharmacy-76524.web.app/admin`
-Use the password set in `NEXT_PUBLIC_ADMIN_PASSWORD`.
+## 5. Admin Dashboard
+Access the live order management dashboard at:
+`/admin`
+Use the password set in `NEXT_PUBLIC_ADMIN_PASSWORD`. Real-time updates are powered by Supabase Postgres Changes

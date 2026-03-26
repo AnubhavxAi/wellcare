@@ -34,3 +34,14 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Firebase Phone Auth Setup (one-time manual step)
+1. Go to console.firebase.google.com
+2. Select project: wellcare-pharmacy-76524
+3. Left menu → Build → Authentication
+4. Click "Sign-in method" tab
+5. Click "Phone" → Toggle Enable → Save
+6. Under "Authorized domains" make sure these are listed:
+   - localhost
+   - wellcare-pharmacy-76524.web.app
+   - wellcare-pharmacy-76524.firebaseapp.com

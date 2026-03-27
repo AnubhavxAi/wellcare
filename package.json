@@ -7,9 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed-products": "ts-node -O '{\"module\":\"commonjs\"}' scripts/seedProducts.ts",
-    "seed-categories": "ts-node -O '{\"module\":\"commonjs\"}' scripts/seedCategories.ts",
-    "seed-supabase": "ts-node -O '{\"module\":\"commonjs\"}' scripts/seedSupabase.ts"
+    "seed-products": "ts-node -P tsconfig.scripts.json scripts/seedProducts.ts",
+    "seed-categories": "ts-node -P tsconfig.scripts.json scripts/seedCategories.ts",
+    "seed-supabase": "ts-node -P tsconfig.scripts.json scripts/seedSupabase.ts"
   },
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "^0.15.0",

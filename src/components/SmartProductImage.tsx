@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useState } from "react";
 import ProductImage from "./ProductImage";
 
@@ -29,17 +30,15 @@ export default function SmartProductImage({
   }
 
   return (
-    <img
-      src={src}
-      alt={name}
-      width={size}
-      height={size}
-      onError={() => setFailed(true)}
-      className={className}
-      style={{ 
-        objectFit: "contain",
-        borderRadius: "8px",
-      }}
-    />
+    <div className={`relative ${className}`} style={{ width: size, height: size }}>
+      <Image
+        src={src}
+        alt={name}
+        fill
+        sizes={`${size}px`}
+        style={{ objectFit: "contain", borderRadius: "8px" }}
+        onError={() => setFailed(true)}
+      />
+    </div>
   );
 }

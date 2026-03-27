@@ -3,70 +3,98 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface NewsItem {
+export interface NewsItem {
   id: number;
+  slug: string;
   category: string;
   title: string;
   excerpt: string;
   date: string;
   image: string;
   url: string;
+  author: string;
+  readTime: string;
+  bgColor: string;
 }
 
-const MOCK_NEWS: NewsItem[] = [
+export const BLOGS: NewsItem[] = [
   {
     id: 1,
+    slug: "diabetes-screening-technology",
     category: "Medical News",
     title: "New Breakthrough in Rapid Diabetes Screening Technology",
     excerpt: "Researchers have developed a non-invasive laser-based system that can detect blood glucose levels through the skin with 98% accuracy.",
     date: "March 24, 2026",
     image: "https://images.unsplash.com/photo-1576091160550-217359f4ecf8?auto=format&fit=crop&q=80&w=800",
-    url: "https://www.medicalnewstoday.com/articles/diabetes"
+    url: "https://www.medicalnewstoday.com/articles/diabetes",
+    author: "Wellcare Research",
+    readTime: "5 min read",
+    bgColor: "#FEF3C7"
   },
   {
     id: 2,
+    slug: "science-of-sleep",
     category: "Health Tips",
     title: "The Science of Sleep: 5 Habits for Better Restorative Rest",
     excerpt: "Understanding your circadian rhythm is the first step toward overcoming insomnia. Discover how temperature and light affect your deep sleep cycles.",
     date: "March 22, 2026",
     image: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&q=80&w=800",
-    url: "https://www.healthline.com/health/sleep-hygiene"
+    url: "https://www.healthline.com/health/sleep-hygiene",
+    author: "Wellcare Health Team",
+    readTime: "4 min read",
+    bgColor: "#DBEAFE"
   },
   {
     id: 3,
+    slug: "seasonal-allergies-agra",
     category: "Wellness",
     title: "Seasonal Allergies in Agra: How to Protect Your Family",
     excerpt: "As the weather shifts, pollen counts are reaching record highs. Learn which antihistamines and lifestyle changes provide the best defense.",
     date: "March 20, 2026",
     image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=800",
-    url: "https://www.webmd.com/allergies/default.htm"
+    url: "https://www.webmd.com/allergies/default.htm",
+    author: "Dr. Arun Jain",
+    readTime: "6 min read",
+    bgColor: "#FCE7F3"
   },
   {
     id: 4,
+    slug: "heart-health-advancements",
     category: "Medical News",
     title: "Advancements in Heart Health: Redefining Cardiovascular Care",
     excerpt: "Cardiologists are adopting AI-driven diagnostics to predict heart events months before they happen, revolutionizing preventative medicine.",
     date: "March 18, 2026",
     image: "https://images.unsplash.com/photo-1628595351029-c2bf17511435?auto=format&fit=crop&q=80&w=800",
-    url: "https://www.mayoclinic.org/diseases-conditions/heart-disease"
+    url: "https://www.mayoclinic.org/diseases-conditions/heart-disease",
+    author: "Wellcare Cardiology",
+    readTime: "5 min read",
+    bgColor: "#DCFCE7"
   },
   {
     id: 5,
+    slug: "gut-health-mental-clarity",
     category: "Nutrition",
     title: "Gut Health and Its Impact on Mental Clarity and Focus",
     excerpt: "Recent studies confirm the strong link between your microbiome and brain function. Here are 3 fermented foods to include in your diet.",
     date: "March 15, 2026",
     image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=800",
-    url: "https://www.healthline.com/nutrition/gut-brain-connection"
+    url: "https://www.healthline.com/nutrition/gut-brain-connection",
+    author: "Wellcare Nutrition",
+    readTime: "4 min read",
+    bgColor: "#FFE4E6"
   },
   {
     id: 6,
+    slug: "essential-immunization-guide",
     category: "Child Health",
     title: "Essential Immunization Guide for Families in 2026",
     excerpt: "Stay updated with the latest pediatric vaccination schedule. Understanding the benefits of early-stage preventative care for your children.",
     date: "March 10, 2026",
     image: "https://images.unsplash.com/photo-1581594634720-3023f03a6bc0?auto=format&fit=crop&q=80&w=800",
-    url: "https://www.who.int/news-room/questions-and-answers/item/vaccines-and-immunization-what-is-vaccination"
+    url: "https://www.who.int/news-room/questions-and-answers/item/vaccines-and-immunization-what-is-vaccination",
+    author: "Dr. Himanshu Jindal",
+    readTime: "6 min read",
+    bgColor: "#EDE9FE"
   }
 ];
 
@@ -80,7 +108,7 @@ export default function HealthBlog() {
     return () => clearInterval(timer);
   }, []);
 
-  const visibleItems = MOCK_NEWS.slice(page * 3, page * 3 + 3);
+  const visibleItems = BLOGS.slice(page * 3, page * 3 + 3);
 
   return (
     <section className="py-24 bg-[#f8f9fa]">

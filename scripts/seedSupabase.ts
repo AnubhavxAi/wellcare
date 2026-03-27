@@ -32,6 +32,7 @@ async function seed() {
         stock:         100,
         unit:          p.packSize || "Unit",
         image_url:     p.imageSrc || null,
+        additional_images: p.additionalImages || [],
         description:   p.description,
         benefits:      p.benefits || [],
         how_to_use:    p.howToUse || [],

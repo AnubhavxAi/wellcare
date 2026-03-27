@@ -3,200 +3,168 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface Blog {
-  slug: string;
+interface NewsItem {
+  id: number;
   category: string;
-  date: string;
   title: string;
   excerpt: string;
-  author: string;
-  readTime: string;
-  bgColor: string;
+  date: string;
+  image: string;
+  url: string;
 }
 
-export const BLOGS: Blog[] = [
-  // Page 1
+const MOCK_NEWS: NewsItem[] = [
   {
-    slug: "dengue-malaria-prevention-agra",
-    category: "Seasonal Health",
-    date: "March 15, 2026",
-    title: "Dengue & Malaria Prevention in Agra — What Every Family Must Know",
-    excerpt: "Agra sees a spike in vector-borne diseases every monsoon. Learn how to protect your family with simple precautions and the right medicines.",
-    author: "Dr. Himanshu Jindal",
-    readTime: "5 min read",
-    bgColor: "#FEF3C7",
+    id: 1,
+    category: "Medical News",
+    title: "New Breakthrough in Rapid Diabetes Screening Technology",
+    excerpt: "Researchers have developed a non-invasive laser-based system that can detect blood glucose levels through the skin with 98% accuracy.",
+    date: "March 24, 2026",
+    image: "https://images.unsplash.com/photo-1576091160550-217359f4ecf8?auto=format&fit=crop&q=80&w=800",
+    url: "https://www.medicalnewstoday.com/articles/diabetes"
   },
   {
-    slug: "managing-blood-sugar-summer",
-    category: "Diabetes Care",
-    date: "March 10, 2026",
-    title: "Managing Blood Sugar in Summer Heat — A Complete Guide",
-    excerpt: "High temperatures can cause blood sugar levels to fluctuate unpredictably. Tips for staying safe and in control during Agra's harsh summers.",
-    author: "Dr. Durgesh Sharma",
-    readTime: "4 min read",
-    bgColor: "#DBEAFE",
+    id: 2,
+    category: "Health Tips",
+    title: "The Science of Sleep: 5 Habits for Better Restorative Rest",
+    excerpt: "Understanding your circadian rhythm is the first step toward overcoming insomnia. Discover how temperature and light affect your deep sleep cycles.",
+    date: "March 22, 2026",
+    image: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&q=80&w=800",
+    url: "https://www.healthline.com/health/sleep-hygiene"
   },
   {
-    slug: "vaccination-schedule-babies",
-    category: "Child Health",
-    date: "March 5, 2026",
-    title: "Vaccination Schedule for Babies in India — Parent's Checklist",
-    excerpt: "Keeping up with your baby's vaccination schedule can be confusing. Our guide breaks down the national immunisation program simply.",
-    author: "Dr. Arun Jain",
-    readTime: "6 min read",
-    bgColor: "#FCE7F3",
+    id: 3,
+    category: "Wellness",
+    title: "Seasonal Allergies in Agra: How to Protect Your Family",
+    excerpt: "As the weather shifts, pollen counts are reaching record highs. Learn which antihistamines and lifestyle changes provide the best defense.",
+    date: "March 20, 2026",
+    image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=800",
+    url: "https://www.webmd.com/allergies/default.htm"
   },
-  // Page 2
   {
-    slug: "superfoods-boost-immunity",
+    id: 4,
+    category: "Medical News",
+    title: "Advancements in Heart Health: Redefining Cardiovascular Care",
+    excerpt: "Cardiologists are adopting AI-driven diagnostics to predict heart events months before they happen, revolutionizing preventative medicine.",
+    date: "March 18, 2026",
+    image: "https://images.unsplash.com/photo-1628595351029-c2bf17511435?auto=format&fit=crop&q=80&w=800",
+    url: "https://www.mayoclinic.org/diseases-conditions/heart-disease"
+  },
+  {
+    id: 5,
     category: "Nutrition",
-    date: "February 28, 2026",
-    title: "10 Superfoods to Boost Your Immunity This Season",
-    excerpt: "Discover the power of natural antioxidants and how they can help you stay healthy during seasonal changes in North India.",
-    author: "Wellcare Health Team",
-    readTime: "4 min read",
-    bgColor: "#DCFCE7",
+    title: "Gut Health and Its Impact on Mental Clarity and Focus",
+    excerpt: "Recent studies confirm the strong link between your microbiome and brain function. Here are 3 fermented foods to include in your diet.",
+    date: "March 15, 2026",
+    image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=800",
+    url: "https://www.healthline.com/nutrition/gut-brain-connection"
   },
   {
-    slug: "understanding-blood-pressure",
-    category: "Heart Health",
-    date: "February 22, 2026",
-    title: "Understanding Blood Pressure — Numbers That Could Save Your Life",
-    excerpt: "High blood pressure is called the 'silent killer' for a reason. Learn what your readings mean and when to act.",
-    author: "Wellcare Health Team",
-    readTime: "5 min read",
-    bgColor: "#FFE4E6",
-  },
-  {
-    slug: "managing-stress-anxiety",
-    category: "Mental Health",
-    date: "February 15, 2026",
-    title: "Managing Stress and Anxiety With Simple Daily Practices",
-    excerpt: "Simple mindfulness and breathing practices that fit into even the busiest routines for better mental wellbeing.",
-    author: "Wellcare Health Team",
-    readTime: "4 min read",
-    bgColor: "#EDE9FE",
-  },
-  // Page 3
-  {
-    slug: "pcos-awareness",
-    category: "Women's Health",
-    date: "February 8, 2026",
-    title: "PCOS Awareness: Signs, Symptoms and What You Can Do",
-    excerpt: "Polycystic ovary syndrome affects 1 in 10 women. Early diagnosis and lifestyle changes can make a significant difference.",
-    author: "Wellcare Health Team",
-    readTime: "6 min read",
-    bgColor: "#FDF2F8",
-  },
-  {
-    slug: "medicine-management-elderly",
-    category: "Senior Care",
-    date: "February 1, 2026",
-    title: "Medicine Management for Elderly Patients — A Caregiver's Guide",
-    excerpt: "Managing multiple medications for elderly parents is challenging. This guide helps prevent common medication errors at home.",
-    author: "Wellcare Health Team",
-    readTime: "5 min read",
-    bgColor: "#F0FDF4",
-  },
-  {
-    slug: "waterborne-diseases-agra",
-    category: "Monsoon Health",
-    date: "January 25, 2026",
-    title: "Waterborne Diseases in Agra — Prevention and First Line Treatment",
-    excerpt: "Typhoid, hepatitis A, and cholera spike during monsoons. Know the symptoms and when to visit a doctor vs manage at home.",
-    author: "Wellcare Health Team",
-    readTime: "5 min read",
-    bgColor: "#EFF6FF",
-  },
+    id: 6,
+    category: "Child Health",
+    title: "Essential Immunization Guide for Families in 2026",
+    excerpt: "Stay updated with the latest pediatric vaccination schedule. Understanding the benefits of early-stage preventative care for your children.",
+    date: "March 10, 2026",
+    image: "https://images.unsplash.com/photo-1581594634720-3023f03a6bc0?auto=format&fit=crop&q=80&w=800",
+    url: "https://www.who.int/news-room/questions-and-answers/item/vaccines-and-immunization-what-is-vaccination"
+  }
 ];
 
-function BlogIllustration({ category, bgColor }: { category: string; bgColor: string }) {
-  return (
-    <div className="w-full h-full flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: bgColor }}>
-      <span className="text-on-surface/5 font-headline font-extrabold text-[80px] leading-none select-none absolute bottom-4 left-4 max-w-full break-words">
-        {category}
-      </span>
-    </div>
-  );
-}
-
 export default function HealthBlog() {
-  const [activePage, setActivePage] = useState(0);
-  const totalPages = 3;
+  const [page, setPage] = useState(0); // 0 or 1
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setActivePage((p) => (p + 1) % totalPages);
-    }, 5000);
+      setPage((prev) => (prev === 0 ? 1 : 0));
+    }, 10000); // 10 seconds rotation
     return () => clearInterval(timer);
   }, []);
 
-  const visibleBlogs = BLOGS.slice(activePage * 3, activePage * 3 + 3);
+  const visibleItems = MOCK_NEWS.slice(page * 3, page * 3 + 3);
 
   return (
-    <section className="py-20 bg-surface">
+    <section className="py-24 bg-[#f8f9fa]">
       <div className="max-w-7xl mx-auto px-6">
-        {/* Header */}
-        <div className="flex items-end justify-between mb-10">
-          <div>
-            <h2 className="font-headline text-4xl font-extrabold text-on-surface tracking-tight">
-              Health Tips & Articles
-            </h2>
-            <p className="text-on-surface-variant mt-2">
-              Stay informed with expert wellness insights for Agra families.
-            </p>
-          </div>
-          <a href="/blog" className="text-primary font-semibold text-sm hover:underline flex items-center gap-1">
-            View all
-            <span className="material-symbols-outlined text-sm">arrow_forward</span>
-          </a>
+        {/* Section Heading */}
+        <div className="mb-12">
+          <h2 className="font-headline text-4xl font-extrabold text-teal-900 tracking-tight">
+            Health & Wellness Insights
+          </h2>
+          <div className="h-1 w-20 bg-teal-500 mt-4 rounded-full"></div>
         </div>
 
-        {/* Blog Cards */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activePage}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
-          >
-            {visibleBlogs.map((blog) => (
-              <a href={`/blog/${blog.slug}`} key={blog.slug} className="group cursor-pointer block">
-                <div className="aspect-[4/3] rounded-xl overflow-hidden mb-5 bg-surface-container-low relative">
-                  <span className="absolute top-4 left-4 px-3 py-1 bg-surface/80 backdrop-blur-sm text-on-surface text-xs font-bold rounded-full z-10">
-                    {blog.category}
-                  </span>
-                  <BlogIllustration category={blog.category} bgColor={blog.bgColor} />
-                </div>
-                <p className="text-on-surface-variant text-xs mb-2">{blog.date}</p>
-                <h3 className="font-headline font-bold text-on-surface text-lg mb-2 group-hover:text-primary transition-colors leading-tight">
-                  {blog.title}
-                </h3>
-                <p className="text-on-surface-variant text-sm leading-relaxed line-clamp-2 mb-4">
-                  {blog.excerpt}
-                </p>
-                <div className="flex items-center gap-2 text-xs text-on-surface-variant">
-                  <span className="font-medium text-on-surface">{blog.author}</span>
-                  <span>·</span>
-                  <span>{blog.readTime}</span>
-                </div>
-              </a>
-            ))}
-          </motion.div>
-        </AnimatePresence>
+        {/* Cards Layout */}
+        <div className="relative min-h-[480px]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={page}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.6, ease: "easeInOut" }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            >
+              {visibleItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-white rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] hover:-translate-y-2 transition-all duration-500 group"
+                >
+                  {/* Thumbnail Image */}
+                  <div className="relative h-56 overflow-hidden">
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute top-4 left-4">
+                      <span className="px-3 py-1.5 bg-teal-600/90 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-lg">
+                        {item.category}
+                      </span>
+                    </div>
+                  </div>
 
-        {/* Dot Indicators */}
-        <div className="flex justify-center gap-2 mt-10">
-          {Array.from({ length: totalPages }).map((_, i) => (
+                  {/* Content Body */}
+                  <div className="p-8">
+                    <span className="text-gray-400 text-xs font-semibold flex items-center gap-1.5 mb-3">
+                      <span className="material-symbols-outlined text-[14px]">calendar_today</span>
+                      {item.date}
+                    </span>
+                    
+                    <h3 className="font-headline font-bold text-xl text-gray-900 mb-4 leading-snug line-clamp-2 h-14">
+                      {item.title}
+                    </h3>
+                    
+                    <p className="text-gray-500 text-[15px] leading-relaxed mb-6 line-clamp-2">
+                      {item.excerpt}
+                    </p>
+
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-teal-700 font-bold text-sm hover:text-teal-900 transition-colors py-2"
+                    >
+                      Read Full Story
+                      <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">
+                        arrow_right_alt
+                      </span>
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Rotation Indicators */}
+        <div className="flex justify-center gap-3 mt-16">
+          {[0, 1].map((i) => (
             <button
               key={i}
-              onClick={() => setActivePage(i)}
-              className={`h-2.5 rounded-full transition-all duration-300 ${
-                i === activePage ? "w-8 bg-primary" : "w-2.5 bg-outline-variant"
+              onClick={() => setPage(i)}
+              className={`h-2.5 rounded-full transition-all duration-500 ${
+                i === page ? "w-10 bg-teal-600 shadow-lg" : "w-2.5 bg-gray-300 hover:bg-teal-300"
               }`}
-              aria-label={`Page ${i + 1}`}
             />
           ))}
         </div>

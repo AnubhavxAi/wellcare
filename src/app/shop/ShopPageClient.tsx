@@ -2,13 +2,26 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Package, Loader2, AlertCircle } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/context/CartContext";
 import SmartProductImage from "@/components/SmartProductImage";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { categories, type CategoryKey, allProducts as localProducts } from "@/data/products";
+
+const categoryIcons: Record<string, string> = {
+  "All": "apps",
+  "Medicines": "medication",
+  "Vitamins & Supplements": "nutrition",
+  "Personal Care": "spa",
+  "Baby Care": "child_care",
+  "Medical Devices": "monitor_heart",
+  "Skincare": "dermatology",
+  "Pain Relief": "healing",
+  "First Aid": "emergency",
+  "Oral Care": "dentistry",
+  "Nutrition": "restaurant",
+};
 
 interface ShopPageClientProps {
   initialCategory?: string;
@@ -17,14 +30,13 @@ interface ShopPageClientProps {
 export default function ShopPageClient({ initialCategory = "All" }: ShopPageClientProps) {
   const router = useRouter();
   const { addToCart } = useCart();
-  
-  // Validate if initialCategory is a valid category, else default to 'All'
-  const validCategory: CategoryKey = categories.includes(initialCategory as CategoryKey) 
-    ? (initialCategory as CategoryKey) 
+
+  const validCategory: CategoryKey = categories.includes(initialCategory as CategoryKey)
+    ? (initialCategory as CategoryKey)
     : "All";
-    
+
   const [activeCategory, setActiveCategory] = useState<CategoryKey>(validCategory);
-  const [sortBy, setSortBy] = useState<"featured" | "price-low" | "price-high">("featured");
+  const [sortBy, setSortBy] = useState<"featured" | "price-low" | "price-high" | "name">("featured");
 
   const { products, loading, error } = useProducts({
     category: activeCategory === "All" ? undefined : activeCategory
@@ -35,40 +47,32 @@ export default function ShopPageClient({ initialCategory = "All" }: ShopPageClie
   const filteredAndSortedProducts = useMemo(() => {
     const sourceProducts = products.length > 0 ? products : localProducts;
     let result = sourceProducts.filter(p => activeCategory === "All" || p.category === activeCategory);
-    
-    if (sortBy === "price-low") {
-      result = [...result].sort((a, b) => a.price - b.price);
-    } else if (sortBy === "price-high") {
-      result = [...result].sort((a, b) => b.price - a.price);
-    }
-    
+    if (sortBy === "price-low") result = [...result].sort((a, b) => a.price - b.price);
+    else if (sortBy === "price-high") result = [...result].sort((a, b) => b.price - a.price);
+    else if (sortBy === "name") result = [...result].sort((a, b) => a.name.localeCompare(b.name));
     return result;
   }, [products, activeCategory, sortBy]);
 
   const handleCategoryClick = (cat: CategoryKey) => {
     setActiveCategory(cat);
-    if (cat === "All") {
-      router.push("/shop");
-    } else {
-      router.push(`/shop/${cat.toLowerCase().replace(/\s+/g, '-')}`);
-    }
+    if (cat === "All") router.push("/shop");
+    else router.push(`/shop/${cat.toLowerCase().replace(/\s+/g, '-')}`);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-surface flex flex-col">
       <Navbar />
-      
-      <main className="flex-grow pt-16 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
-        
+
+      <main className="flex-grow max-w-7xl mx-auto w-full px-6 pt-24 pb-32">
         {/* Breadcrumb */}
-        <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-6 overflow-x-auto whitespace-nowrap pb-2 scrollbar-hide">
-          <button onClick={() => router.push("/")} className="hover:text-[var(--color-brand-green)] transition-colors">Home</button>
-          <ChevronRight size={14} />
-          <button onClick={() => handleCategoryClick("All")} className={`hover:text-[var(--color-brand-green)] transition-colors ${activeCategory === "All" ? "font-bold text-gray-900" : ""}`}>Shop</button>
+        <nav className="flex items-center gap-2 text-sm text-on-surface-variant mb-8">
+          <button onClick={() => router.push("/")} className="hover:text-primary transition-colors">Home</button>
+          <span className="text-outline-variant">›</span>
+          <button onClick={() => handleCategoryClick("All")} className={`hover:text-primary transition-colors ${activeCategory === "All" ? "font-medium text-on-surface" : ""}`}>Shop</button>
           {activeCategory !== "All" && (
             <>
-              <ChevronRight size={14} />
-              <span className="font-bold text-gray-900">{activeCategory}</span>
+              <span className="text-outline-variant">›</span>
+              <span className="font-medium text-on-surface">{activeCategory}</span>
             </>
           )}
         </nav>
@@ -76,59 +80,48 @@ export default function ShopPageClient({ initialCategory = "All" }: ShopPageClie
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-[var(--color-brand-navy)] mb-2">
-              {activeCategory === "All" ? "All Products" : activeCategory}
+            <h1 className="font-headline text-5xl font-extrabold tracking-tight text-on-surface mb-2">
+              Essential <span className="text-primary">Medicines</span>
             </h1>
-            <p className="text-gray-500 font-medium">
+            <p className="text-on-surface-variant text-lg">
               Showing {filteredAndSortedProducts.length} products
             </p>
           </div>
-          
-          {/* Top Filter Bar */}
-          <div className="flex items-center space-x-3 bg-white p-2 rounded-xl shadow-sm border border-gray-100">
-            <span className="text-sm font-bold text-gray-600 pl-2">Sort by:</span>
-            <select 
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="bg-gray-50 border-none text-sm font-medium rounded-lg focus:ring-2 focus:ring-[var(--color-brand-green)] py-2 pl-3 pr-8 cursor-pointer"
-            >
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold text-on-surface-variant">Sort by:</span>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)}
+              className="bg-surface-container-highest text-sm font-medium rounded-xl focus:ring-2 focus:ring-primary/15 py-2.5 pl-4 pr-8 outline-none text-on-surface cursor-pointer">
               <option value="featured">Featured</option>
               <option value="price-low">Price: Low to High</option>
               <option value="price-high">Price: High to Low</option>
+              <option value="name">Name A-Z</option>
             </select>
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
-          
-          {/* Desktop Sidebar (Categories) */}
-          <aside className="w-full lg:w-64 shrink-0 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-24 hidden lg:block">
-            <h3 className="font-extrabold text-lg text-[var(--color-brand-navy)] mb-4 pb-4 border-b border-gray-100">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Sidebar */}
+          <aside className="lg:col-span-3 bg-surface-container-low rounded-xl p-6 sticky top-24 hidden lg:block">
+            <h3 className="font-headline font-bold text-lg text-on-surface mb-4 pb-4 border-b border-outline-variant/20">
               Categories
             </h3>
-            <ul className="space-y-2">
+            <ul className="space-y-1">
               <li>
-                <button
-                  onClick={() => handleCategoryClick("All")}
-                  className={`w-full text-left px-4 py-2.5 rounded-xl font-bold transition-all text-sm ${
-                    activeCategory === "All" 
-                      ? "bg-[#DCFCE7] text-[#15803D]" 
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                  }`}
-                >
+                <button onClick={() => handleCategoryClick("All")}
+                  className={`w-full text-left px-4 py-2.5 rounded-xl font-semibold transition-all text-sm flex items-center gap-3 ${
+                    activeCategory === "All" ? "text-primary font-bold bg-primary-fixed" : "text-on-surface-variant hover:text-primary"
+                  }`}>
+                  <span className="material-symbols-outlined text-sm">apps</span>
                   All Products
                 </button>
               </li>
               {displayCategories.map((cat) => (
                 <li key={cat}>
-                  <button
-                    onClick={() => handleCategoryClick(cat)}
-                    className={`w-full text-left px-4 py-2.5 rounded-xl font-bold transition-all text-sm ${
-                      activeCategory === cat 
-                        ? "bg-[#DCFCE7] text-[#15803D]" 
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    }`}
-                  >
+                  <button onClick={() => handleCategoryClick(cat)}
+                    className={`w-full text-left px-4 py-2.5 rounded-xl font-semibold transition-all text-sm flex items-center gap-3 ${
+                      activeCategory === cat ? "text-primary font-bold bg-primary-fixed" : "text-on-surface-variant hover:text-primary"
+                    }`}>
+                    <span className="material-symbols-outlined text-sm">{categoryIcons[cat] || "category"}</span>
                     {cat}
                   </button>
                 </li>
@@ -136,147 +129,84 @@ export default function ShopPageClient({ initialCategory = "All" }: ShopPageClie
             </ul>
           </aside>
 
-          {/* Mobile Category Select (Horizontal Scroll) */}
-          <div className="w-full lg:hidden flex overflow-x-auto pb-4 space-x-2 scrollbar-hide snap-x">
-             <button
-               onClick={() => handleCategoryClick("All")}
-               className={`snap-center shrink-0 px-5 py-2.5 rounded-full font-bold text-sm transition-all border-2 ${
-                 activeCategory === "All"
-                   ? "bg-[#DCFCE7] border-[#16A34A] text-[#15803D]"
-                   : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
-               }`}
-             >
-               All Products
-             </button>
-             {displayCategories.map((cat) => (
-               <button
-                 key={cat}
-                 onClick={() => handleCategoryClick(cat)}
-                 className={`snap-center shrink-0 px-5 py-2.5 rounded-full font-bold text-sm transition-all border-2 ${
-                   activeCategory === cat
-                     ? "bg-[#DCFCE7] border-[#16A34A] text-[#15803D]"
-                     : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
-                 }`}
-               >
-                 {cat}
-               </button>
-             ))}
+          {/* Mobile Category Chips */}
+          <div className="w-full lg:hidden flex overflow-x-auto pb-4 gap-2 scrollbar-hide" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+            <button onClick={() => handleCategoryClick("All")}
+              className={`shrink-0 px-5 py-2 rounded-full font-label font-semibold text-sm transition-all ${
+                activeCategory === "All" ? "bg-primary text-white" : "bg-secondary-fixed text-on-secondary-fixed"
+              }`}>All Products</button>
+            {displayCategories.map((cat) => (
+              <button key={cat} onClick={() => handleCategoryClick(cat)}
+                className={`shrink-0 px-5 py-2 rounded-full font-label font-semibold text-sm transition-all ${
+                  activeCategory === cat ? "bg-primary text-white" : "bg-secondary-fixed text-on-secondary-fixed"
+                }`}>{cat}</button>
+            ))}
           </div>
 
           {/* Product Grid */}
-          <div className="flex-1 w-full relative min-h-[500px]">
+          <div className="lg:col-span-9 w-full relative min-h-[500px]">
             {loading && products.length === 0 && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm z-10 rounded-3xl">
-                <Loader2 className="w-10 h-10 text-[var(--color-brand-green)] animate-spin mb-4" />
+              <div className="absolute inset-0 flex items-center justify-center bg-surface/50 backdrop-blur-sm z-10 rounded-xl">
+                <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
               </div>
             )}
 
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-center space-x-3 text-red-700">
-                <AlertCircle size={20} />
+              <div className="mb-6 p-4 bg-error-container rounded-xl flex items-center gap-3 text-on-error-container">
+                <span className="material-symbols-outlined text-error text-sm">error</span>
                 <p className="text-sm font-medium">{error}</p>
               </div>
             )}
 
             {filteredAndSortedProducts.length === 0 && !loading ? (
-               <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 h-full flex flex-col items-center justify-center">
-                 <Package className="w-16 h-16 text-gray-200 mb-4" />
-                 <h3 className="text-xl font-bold text-gray-800 mb-2">No products found</h3>
-                 <p className="text-gray-500">There are no products available in this category.</p>
-               </div>
+              <div className="text-center py-20 bg-surface-container-lowest rounded-xl flex flex-col items-center justify-center">
+                <span className="material-symbols-outlined text-outline-variant text-5xl mb-4">inventory_2</span>
+                <h3 className="text-xl font-bold text-on-surface mb-2">No products found</h3>
+                <p className="text-on-surface-variant">There are no products available in this category.</p>
+              </div>
             ) : (
-               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                 {filteredAndSortedProducts.map((product) => (
-                   <div
-                     key={product.id}
-                     className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col group cursor-pointer"
-                     onClick={() => router.push(`/product/${product.slug}`)}
-                   >
-                     {/* Product Image */}
-                     <div className="w-full aspect-square bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden p-4">
-                       <SmartProductImage
-                         category={product.category}
-                         name={product.name}
-                         src={product.imageSrc}
-                         size={200}
-                         className="w-full h-full group-hover:scale-105 transition-transform duration-300"
-                       />
-                       {product.originalPrice && (
-                         <span className="absolute top-3 left-3 bg-red-500 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-full z-10 shadow-sm border border-red-600">
-                           {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
-                         </span>
-                       )}
-                       {!product.inStock && (
-                         <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10 backdrop-blur-sm">
-                           <span className="text-xs sm:text-sm font-bold text-gray-500 bg-white px-3 py-1.5 rounded-full shadow-sm border border-gray-200">
-                             Out of Stock
-                           </span>
-                         </div>
-                       )}
-                     </div>
-
-                     {/* Details */}
-                     <div className="p-4 flex-grow flex flex-col pt-5">
-                       <div className="flex justify-between items-start mb-1.5">
-                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 px-2 py-0.5 rounded">
-                           {product.brand}
-                         </span>
-                         {product.rxRequired && (
-                           <span className="text-[9px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-100">Rx</span>
-                         )}
-                       </div>
-                       <h3
-                         className="text-sm sm:text-base font-bold text-gray-900 mb-2 leading-snug line-clamp-2 group-hover:text-[var(--color-brand-green)] transition-colors"
-                         title={product.name}
-                       >
-                         {product.name}
-                       </h3>
-                       
-                       <div className="flex-grow"></div>
-
-                       {/* Price */}
-                       <div className="flex items-end space-x-2 mb-4 pt-2 border-t border-gray-50">
-                         <span className="text-xl sm:text-2xl font-black text-[var(--color-brand-navy)] tracking-tight">
-                           ₹{product.price}
-                         </span>
-                         {product.originalPrice && (
-                           <span className="text-sm text-gray-400 line-through font-medium pb-0.5">
-                             ₹{product.originalPrice}
-                           </span>
-                         )}
-                       </div>
-
-                       {/* Action Buttons */}
-                       <div onClick={(e) => e.stopPropagation()}>
-                         <button
-                           onClick={(e) => {
-                             e.stopPropagation();
-                             addToCart({
-                               id: product.id,
-                               name: product.name,
-                               brand: product.brand,
-                               price: product.price,
-                               mrp: product.originalPrice || product.price,
-                               category: product.category,
-                               unit: product.packSize || "1 unit",
-                               slug: product.slug,
-                             });
-                           }}
-                           disabled={!product.inStock}
-                           className="w-full bg-[var(--color-brand-green)] hover:bg-emerald-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-200 text-white font-bold py-3 rounded-xl transition-all shadow-sm active:scale-95 flex items-center justify-center"
-                         >
-                           {product.inStock ? "Add to Cart" : "Out of Stock"}
-                         </button>
-                       </div>
-                     </div>
-                   </div>
-                 ))}
-               </div>
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredAndSortedProducts.map((product) => (
+                  <div key={product.id}
+                    className="bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_12px_40px_rgba(25,28,28,0.04)] hover:translate-y-[-4px] hover:shadow-[0_20px_60px_rgba(25,28,28,0.08)] transition-all duration-300 flex flex-col group cursor-pointer"
+                    onClick={() => router.push(`/product/${product.slug}`)}
+                  >
+                    <div className="w-full aspect-square bg-surface-container-low flex items-center justify-center p-6 overflow-hidden relative">
+                      <SmartProductImage category={product.category} name={product.name} src={product.imageSrc} size={200}
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+                      {!product.inStock && (
+                        <div className="absolute inset-0 bg-surface/80 flex items-center justify-center z-10 backdrop-blur-sm">
+                          <span className="text-sm font-bold text-on-surface-variant bg-surface-container px-4 py-2 rounded-full">Out of Stock</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4 flex-grow flex flex-col">
+                      <span className="text-xs font-bold text-primary tracking-widest uppercase mb-1">{product.category}</span>
+                      <h3 className="font-headline font-bold text-on-surface text-sm mb-1 leading-snug line-clamp-2">{product.name}</h3>
+                      <p className="text-on-surface-variant text-xs line-clamp-1 mb-3">{product.description}</p>
+                      <div className="flex-grow"></div>
+                      <div className="flex items-end justify-between mt-2">
+                        <div>
+                          <span className="font-headline text-lg font-extrabold text-on-surface">₹{product.price}</span>
+                          {product.originalPrice && <span className="text-xs text-on-surface-variant line-through ml-1.5">₹{product.originalPrice}</span>}
+                        </div>
+                        <button onClick={(e) => {
+                          e.stopPropagation();
+                          addToCart({ id: product.id, name: product.name, brand: product.brand, price: product.price,
+                            mrp: product.originalPrice || product.price, category: product.category, unit: product.packSize || "1 unit", slug: product.slug });
+                        }} disabled={!product.inStock}
+                          className="w-9 h-9 rounded-full bg-gradient-to-r from-primary to-primary-container text-white flex items-center justify-center hover:shadow-lg active:scale-95 transition-all disabled:opacity-40">
+                          <span className="material-symbols-outlined text-sm">add</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
       </main>
-
       <Footer />
     </div>
   );

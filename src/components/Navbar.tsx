@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart, Menu, X, User, LogOut, ChevronDown } from "lucide-react";
 import CartDrawer from "./CartDrawer";
@@ -8,9 +9,9 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 
 const navLinks = [
-  { name: "Home", href: "#" },
   { name: "Medicines", href: "#categories" },
   { name: "Lab Tests", href: "#lab-tests" },
+  { name: "Wellness", href: "#" },
   { name: "Offers", href: "#" },
   { name: "Upload Rx", href: "#prescription-upload" },
 ];
@@ -64,13 +65,24 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className="flex-shrink-0 flex items-center">
+          <Link 
+            href="/" 
+            className="flex-shrink-0 flex items-center space-x-3 group transition-transform active:scale-95"
+          >
             <img
               src="/logo.png"
               alt="Wellcare Pharmacy Logo"
-              className="max-h-[40px] lg:max-h-[48px] object-contain"
+              className="max-h-[44px] lg:max-h-[56px] w-auto object-contain drop-shadow-sm"
+              onError={(e) => {
+                // Fallback to text if logo.png is missing or broken
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              }}
             />
-          </div>
+            <span className="font-headline font-extrabold text-2xl lg:text-3xl text-primary tracking-tighter drop-shadow-sm group-hover:text-primary-container transition-colors">
+              WELLCARE
+            </span>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex space-x-6 xl:space-x-8">
@@ -100,22 +112,16 @@ export default function Navbar() {
           <div className="flex items-center space-x-2 sm:space-x-3">
             {/* Auth State */}
             {user ? (
-              /* Logged-in: Avatar + Dropdown */
               <div className="relative">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsUserDropdownOpen(!isUserDropdownOpen);
                   }}
-                  className="hidden sm:flex items-center space-x-1.5 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                  className="hidden sm:flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-colors font-bold text-sm"
                 >
-                  <div className="w-8 h-8 bg-[var(--color-brand-green)] text-white rounded-full flex items-center justify-center text-xs font-bold">
-                    {getInitials()}
-                  </div>
-                  <ChevronDown size={14} className="text-gray-400" />
+                  {getInitials()}
                 </button>
-
-                {/* Dropdown */}
                 <AnimatePresence>
                   {isUserDropdownOpen && (
                     <motion.div
@@ -146,31 +152,21 @@ export default function Navbar() {
                 </AnimatePresence>
               </div>
             ) : (
-              /* Not logged in: Login button */
               <button
                 onClick={openLogin}
-                className="hidden sm:flex items-center space-x-1.5 px-4 py-2 text-sm font-semibold text-[var(--color-brand-green)] hover:bg-green-50 rounded-lg transition-colors"
+                className="hidden sm:flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-colors"
               >
-                <User size={18} />
-                <span>Login</span>
+                <User size={18} strokeWidth={2.5} />
               </button>
             )}
 
             {/* Cart */}
             <button
               onClick={openCart}
-              className="relative p-2 text-gray-700 hover:text-[var(--color-brand-green)] transition-colors"
+              className="relative flex items-center justify-center space-x-1.5 px-3 h-10 bg-[#Edfaf3] hover:bg-[#d5f5e3] text-teal-800 rounded-xl transition-colors font-bold"
             >
-              <ShoppingCart size={22} />
-              {cartCount > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-0.5 -right-0.5 bg-[var(--color-brand-green)] text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center"
-                >
-                  {cartCount}
-                </motion.span>
-              )}
+              <ShoppingCart size={18} strokeWidth={2.5} />
+              <span className="text-sm">{cartCount}</span>
             </button>
 
             {/* Mobile menu button */}

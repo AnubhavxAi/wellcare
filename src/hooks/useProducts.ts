@@ -26,6 +26,8 @@ export function useProducts(options: { category?: string; limit?: number } = {})
       }
 
       const { data, error: fetchError } = await query;
+      console.log('Supabase Data:', data?.length);
+      console.log('Supabase Error:', fetchError);
 
       if (fetchError) {
         setError(fetchError.message);

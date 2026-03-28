@@ -253,7 +253,7 @@ export default function SignupPage() {
               </p>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "col", gap: "16px", marginBottom: "24px" }} className="flex-col">
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "24px" }} className="flex-col">
               
               {/* FULL NAME */}
               <div>

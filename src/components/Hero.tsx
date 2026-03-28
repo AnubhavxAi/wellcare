@@ -10,39 +10,12 @@ const slideContent = {
 };
 
 export default function Hero() {
-  const [current, setCurrent] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
-  const [direction, setDirection] = useState(1);
-
-  const goTo = useCallback(
-    (index: number) => {
-      setDirection(index > current ? 1 : -1);
-      setCurrent(index);
-    },
-    [current]
-  );
-
-  const next = useCallback(() => {
-    setDirection(1);
-    setCurrent((prev) => (prev + 1) % 3);
-  }, []);
-
-  const prev = useCallback(() => {
-    setDirection(-1);
-    setCurrent((prev) => (prev - 1 + 3) % 3);
-  }, []);
-
-  // Auto-rotate
-  useEffect(() => {
-    const timer = setInterval(next, 5000);
-    return () => clearInterval(timer);
-  }, [next]);
 
   const handleSearch = () => {
     if (searchTerm.trim()) {
       const el = document.getElementById("categories");
       if (el) el.scrollIntoView({ behavior: "smooth" });
-      // dispatch search via URL
       const url = new URL(window.location.href);
       url.searchParams.set("search", searchTerm);
       url.hash = "categories";
@@ -54,119 +27,185 @@ export default function Hero() {
     }
   };
 
-  const variants = {
-    enter: (dir: number) => ({ x: dir > 0 ? 50 : -50, opacity: 0 }),
-    center: { x: 0, opacity: 1 },
-    exit: (dir: number) => ({ x: dir > 0 ? -50 : 50, opacity: 0 }),
-  };
-
   return (
-    <section className="relative overflow-hidden pt-4 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8 max-w-[1400px] mx-auto">
-      {/* Carousel Container */}
-      <div className="relative rounded-3xl overflow-hidden shadow-xl bg-gradient-to-r from-teal-700 to-emerald-400 min-h-[400px] lg:min-h-[480px]">
-        {/* Background Decorative Pattern */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="leaf-pattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
-                <path d="M 50 0 C 70 20, 80 40, 50 80 C 20 40, 30 20, 50 0 Z" fill="currentColor" transform="scale(0.5) translate(25, 25) rotate(45)"/>
-                <path d="M 50 0 C 70 20, 80 40, 50 80 C 20 40, 30 20, 50 0 Z" fill="currentColor" transform="scale(0.8) translate(75, 50) rotate(-30)"/>
-              </pattern>
-            </defs>
-            <rect x="0" y="0" width="100%" height="100%" fill="url(#leaf-pattern)"/>
-          </svg>
-        </div>
+    <section 
+      style={{
+        background: "linear-gradient(135deg, #0b4d14 0%, #0b6b1d 25%, #1a8a2e 50%, #0d7a23 75%, #053d0d 100%)",
+        position: "relative",
+        overflow: "hidden",
+        minHeight: "100vh",
+        paddingTop: "100px", // Accommodate fixed navbar + extra space
+        paddingBottom: "48px",
+        display: "flex",
+        alignItems: "center",
+      }}
+    >
+      {/* FLOATING BACKGROUND ORBS */}
+      <div style={{
+        position: "absolute", inset: 0,
+        pointerEvents: "none", overflow: "hidden",
+      }}>
+        {/* Large orb top right */}
+        <div style={{
+          position: "absolute",
+          width: "600px", height: "600px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(46,133,52,0.4) 0%, transparent 70%)",
+          top: "-200px", right: "-100px",
+          filter: "blur(60px)",
+          animation: "floatOrb1 8s ease-in-out infinite",
+        }}/>
+        {/* Medium orb bottom left */}
+        <div style={{
+          position: "absolute",
+          width: "400px", height: "400px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(157,248,152,0.25) 0%, transparent 70%)",
+          bottom: "-100px", left: "5%",
+          filter: "blur(50px)",
+          animation: "floatOrb2 10s ease-in-out infinite",
+        }}/>
+        {/* Small orb center */}
+        <div style={{
+          position: "absolute",
+          width: "250px", height: "250px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)",
+          top: "40%", left: "40%",
+          filter: "blur(40px)",
+          animation: "floatOrb3 12s ease-in-out infinite",
+        }}/>
+      </div>
 
-        <div className="absolute inset-0 max-w-7xl mx-auto w-full h-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
-            
-            {/* Left Text & Search */}
-            <div className="flex flex-col justify-center px-8 sm:px-16 py-12 lg:py-0 relative z-10 w-full lg:w-[120%]">
-              <AnimatePresence mode="wait" custom={direction}>
-                <motion.div
-                  key={current}
-                  custom={direction}
-                  variants={variants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ duration: 0.4, ease: "easeInOut" }}
-                  className="space-y-6"
-                >
-                  <h1 className="text-4xl md:text-5xl lg:text-5xl font-extrabold text-white leading-tight drop-shadow-sm max-w-xl">
-                    {slideContent.headline}
-                  </h1>
-                  <p className="text-lg md:text-xl text-white/90 max-w-md font-medium leading-relaxed">
-                    {slideContent.subtext}
-                  </p>
+      {/* FLOATING GRID LINES */}
+      <div style={{
+        position: "absolute", inset: 0,
+        backgroundImage: `
+          linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
+        `,
+        backgroundSize: "60px 60px",
+        pointerEvents: "none",
+      }}/>
 
-                  {/* Search Bar inside Hero */}
-                  <div className="mt-8 bg-white p-2 rounded-2xl flex items-center shadow-lg w-full max-w-xl">
-                    <div className="pl-3 pointer-events-none">
-                      <Search className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="Search for medicines, health products, lab tests..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                      className="flex-1 pl-3 pr-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none text-[15px] bg-transparent w-full"
-                    />
-                    <button
-                      onClick={handleSearch}
-                      className="px-6 py-3 bg-teal-800 text-white font-bold rounded-xl hover:bg-teal-900 transition-colors shadow-sm text-sm whitespace-nowrap"
-                    >
-                      Search
-                    </button>
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-            {/* Right Image */}
-            <div className="hidden lg:flex items-end justify-center relative overflow-hidden">
-              <motion.img 
-                src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=800" 
-                alt="Smiling Doctor"
-                className="object-cover object-top w-[90%] h-[90%] rounded-t-3xl shadow-2xl absolute bottom-0 right-8 border-4 border-white/20"
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Navigation Arrows */}
-        <button
-          onClick={prev}
-          className="absolute left-4 top-1/2 -translate-y-1/2 p-2.5 bg-black/10 hover:bg-black/20 backdrop-blur-md rounded-full text-white transition-colors z-20"
-          aria-label="Previous slide"
+      <div className="max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
+        {/* LEFT COLUMN */}
+        <motion.div 
+          className="glass-card flex-1" 
+          style={{
+            padding: "48px",
+            maxWidth: "640px",
+          }}
+          initial={{ x: -50, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.6 }}
         >
-          <ChevronLeft size={24} />
-        </button>
-        <button
-          onClick={next}
-          className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 bg-black/10 hover:bg-black/20 backdrop-blur-md rounded-full text-white transition-colors z-20"
-          aria-label="Next slide"
-        >
-          <ChevronRight size={24} />
-        </button>
+          <h1 style={{
+            fontFamily: "Manrope, sans-serif",
+            fontSize: "clamp(2.5rem, 5vw, 4rem)",
+            fontWeight: 800,
+            color: "white",
+            lineHeight: 1.15,
+            letterSpacing: "-0.02em",
+            marginBottom: "20px",
+            textShadow: "0 2px 20px rgba(0,0,0,0.2)",
+          }}>
+            Your Health,<br/>
+            <span style={{ color: "#9df898" }}>Delivered Fast.</span>
+          </h1>
+          <p style={{
+            color: "rgba(255,255,255,0.80)",
+            fontSize: "1.125rem",
+            lineHeight: 1.7,
+            marginBottom: "36px",
+          }}>
+            Order medicines, lab tests, and wellness essentials 
+            with free doorstep delivery across Agra.
+          </p>
 
-        {/* Dots */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
-          {[0, 1, 2].map((i) => (
-            <button
-              key={i}
-              onClick={() => goTo(i)}
-              className={`h-2.5 rounded-full transition-all duration-300 ${
-                i === current ? "w-8 bg-white" : "w-2.5 bg-white/50 hover:bg-white/80"
-              }`}
-              aria-label={`Go to slide ${i + 1}`}
+          {/* GLASSMORPHISM SEARCH BAR */}
+          <div style={{
+            display: "flex",
+            background: "rgba(255,255,255,0.15)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            border: "1.5px solid rgba(255,255,255,0.40)",
+            borderRadius: "50px",
+            padding: "6px 6px 6px 24px",
+            gap: "8px",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.25)",
+            marginBottom: "28px",
+          }}>
+            <input
+              placeholder="Search medicines, lab tests..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              style={{
+                flex: 1,
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                color: "white",
+                fontSize: "1rem",
+              }}
+              className="placeholder-white/60"
             />
+            <button 
+              onClick={handleSearch}
+              style={{
+                background: "linear-gradient(135deg, #9df898, #2e8534)",
+                color: "#003008",
+                border: "none",
+                borderRadius: "50px",
+                padding: "12px 28px",
+                fontWeight: 700,
+                fontSize: "0.95rem",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}>
+              Search
+            </button>
+          </div>
+        </motion.div>
+
+        {/* RIGHT COLUMN */}
+        <motion.div 
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+            gap: "16px",
+            maxWidth: "400px",
+            width: "100%",
+          }}
+          initial={{ x: 50, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          {[
+            { icon: "verified", title: "Genuine Medicines", sub: "100% Authentic" },
+            { icon: "local_shipping", title: "Fast Delivery", sub: "2-Hour Delivery" },
+            { icon: "labs", title: "Lab Reports", sub: "Home Collection" },
+            { icon: "lock", title: "Secure Payment", sub: "Safe Transactions" },
+          ].map((item, idx) => (
+            <div key={idx} className="glass-card p-5 text-center flex flex-col items-center justify-center">
+              <span className="material-symbols-outlined" style={{
+                fontSize: "32px",
+                color: "#9df898",
+                display: "block",
+                marginBottom: "10px",
+              }}>
+                {item.icon}
+              </span>
+              <p style={{ color: "white", fontWeight: 600, fontSize: "0.9rem" }}>
+                {item.title}
+              </p>
+              <p style={{ color: "rgba(255,255,255,0.65)", fontSize: "0.78rem" }}>
+                {item.sub}
+              </p>
+            </div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

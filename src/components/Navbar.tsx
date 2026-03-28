@@ -58,9 +58,15 @@ export default function Navbar() {
 
   return (
     <header
-      className={`bg-white/95 backdrop-blur-md fixed w-full top-0 z-[30] h-16 transition-shadow duration-300 ${
-        isScrolled ? "shadow-md" : "shadow-sm"
-      }`}
+      className={isScrolled ? "glass-nav-scrolled" : "glass-nav"}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 9999,
+        transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+      }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
@@ -118,31 +124,49 @@ export default function Navbar() {
                     e.stopPropagation();
                     setIsUserDropdownOpen(!isUserDropdownOpen);
                   }}
-                  className="hidden sm:flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-colors font-bold text-sm"
+                  className="hidden sm:flex items-center justify-center space-x-2 px-4 py-2 bg-[rgba(255,255,255,0.12)] hover:bg-[rgba(255,255,255,0.22)] backdrop-blur-[10px] border border-[rgba(255,255,255,0.25)] text-white rounded-full transition-all duration-200 text-sm font-semibold"
                 >
-                  {getInitials()}
+                  <span className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-xs">
+                    {getInitials()}
+                  </span>
+                  <span>Hi, {user.name?.split(' ')[0]}</span>
+                  <ChevronDown size={14} className={`transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 <AnimatePresence>
                   {isUserDropdownOpen && (
                     <motion.div
-                      initial={{ opacity: 0, y: -5, scale: 0.95 }}
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -5, scale: 0.95 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+                      className="absolute right-0 mt-3 w-56 rounded-2xl shadow-2xl overflow-hidden z-50 p-2"
+                      style={{
+                        background: "rgba(11,107,29,0.85)",
+                        backdropFilter: "blur(20px)",
+                        WebkitBackdropFilter: "blur(20px)",
+                        border: "1px solid rgba(255,255,255,0.15)",
+                      }}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <div className="px-4 py-3 border-b border-gray-100">
-                        <p className="text-sm font-bold text-gray-900">
+                      <div className="px-3 py-3 border-b border-white/10 mb-2">
+                        <p className="text-sm font-bold text-white">
                           {user?.name || "Welcome!"}
                         </p>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <p className="text-xs text-white/60 mt-0.5">
                           {user?.phone}
                         </p>
                       </div>
+                      <Link
+                        href="/account/orders"
+                        className="w-full flex items-center space-x-3 px-3 py-2.5 text-sm text-white hover:bg-white/10 rounded-xl transition-colors"
+                        onClick={() => setIsUserDropdownOpen(false)}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>receipt_long</span>
+                        <span>My Orders</span>
+                      </Link>
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center space-x-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        className="w-full flex items-center space-x-3 px-3 py-2.5 text-sm text-[#ffb4ab] hover:bg-red-500/20 rounded-xl transition-colors mt-1"
                       >
                         <LogOut size={16} />
                         <span>Logout</span>
@@ -152,21 +176,35 @@ export default function Navbar() {
                 </AnimatePresence>
               </div>
             ) : (
-              <button
-                onClick={openLogin}
-                className="hidden sm:flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-colors"
+              <Link
+                href="/login"
+                style={{
+                  background: "rgba(255,255,255,0.12)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255,255,255,0.25)",
+                  borderRadius: "50px",
+                  padding: "8px 20px",
+                  color: "white",
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  textDecoration: "none",
+                  transition: "all 0.2s ease",
+                }}
+                className="hidden sm:flex hover:bg-white/20"
               >
-                <User size={18} strokeWidth={2.5} />
-              </button>
+                Login
+              </Link>
             )}
 
             {/* Cart */}
             <button
               onClick={openCart}
-              className="relative flex items-center justify-center space-x-1.5 px-3 h-10 bg-[#Edfaf3] hover:bg-[#d5f5e3] text-teal-800 rounded-xl transition-colors font-bold"
+              className="relative flex items-center justify-center space-x-1.5 px-3 h-10 bg-[rgba(255,255,255,0.15)] hover:bg-[rgba(255,255,255,0.25)] border border-[rgba(255,255,255,0.25)] text-white rounded-full transition-colors font-bold backdrop-blur-md"
             >
               <ShoppingCart size={18} strokeWidth={2.5} />
-              <span className="text-sm">{cartCount}</span>
+              <span className="absolute -top-1.5 -right-1.5 bg-[#9df898] text-[#003008] text-[10px] w-5 h-5 flex items-center justify-center rounded-full shadow-md font-extrabold">{cartCount}</span>
             </button>
 
             {/* Mobile menu button */}
@@ -233,16 +271,14 @@ export default function Navbar() {
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    openLogin();
-                  }}
-                  className="flex items-center space-x-2 px-4 py-3 mb-4 bg-green-50 text-[var(--color-brand-green)] font-semibold rounded-xl"
+                <Link
+                  href="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-center space-x-2 px-4 py-3 mb-4 bg-gradient-to-r from-teal-800 to-emerald-700 text-white font-semibold rounded-xl"
                 >
                   <User size={20} />
                   <span>Login / Register</span>
-                </button>
+                </Link>
               )}
 
               <nav className="flex flex-col space-y-1">

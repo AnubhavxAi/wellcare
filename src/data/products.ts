@@ -17,6 +17,15 @@ export interface Product {
   form: string;
   rxRequired: boolean;
   packSize: string;
+  // New medical-grade fields
+  saltComposition?: string;
+  manufacturer?: string;
+  storageInstructions?: string;
+  sideEffects?: string[];
+  contraindications?: string[];
+  drugInteractions?: string[];
+  ageGroup?: "Adults" | "Children" | "All ages";
+  warning?: string;
 }
 
 export type CategoryKey =
@@ -48,7 +57,7 @@ export const categoryIcons: Record<Exclude<CategoryKey, "All">, string> = {
 };
 
 
-export const allProducts: Product[] = [
+const _baseProducts: Product[] = [
   // ── MEDICINES ──────────────────────────────────────────────
   {
     id: "p1",
@@ -1075,6 +1084,10 @@ export const allProducts: Product[] = [
   },
 ];
 
+// Import and merge the 100 new products
+import { newProducts } from "./newProducts";
+export const allProducts: Product[] = [..._baseProducts, ...newProducts];
+
 export const categories: CategoryKey[] = [
   "All",
   "Medicines",
@@ -1091,3 +1104,4 @@ export const categories: CategoryKey[] = [
 ];
 
 export const brands = Array.from(new Set(allProducts.map((p) => p.brand))).sort();
+

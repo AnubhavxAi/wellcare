@@ -1,559 +1,290 @@
 "use client";
-import { useState, useRef } from "react";
+
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
+import { Smartphone, Lock, ArrowRight, MessageSquare, CheckCircle2, ChevronLeft } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function LoginPage() {
-  const [screen, setScreen] = useState<"phone" | "otp" | "name">("phone");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = searchParams.get("redirect") || "/";
+
+  // Auth State
+  const [step, setStep] = useState(1); // 1: Phone, 2: OTP, 3: Name
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [otpError, setOtpError] = useState("");
-  const [countdown, setCountdown] = useState(0);
-  const { setUser } = useAuth();
-  const router = useRouter();
-  const refs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const startCountdown = (secs: number) => {
-    setCountdown(secs);
-    const iv = setInterval(() => {
-      setCountdown((c) => {
-        if (c <= 1) {
-          clearInterval(iv);
-          return 0;
-        }
-        return c - 1;
-      });
-    }, 1000);
-  };
-
-  const handleSendOtp = async () => {
-    const digits = phone.replace(/\D/g, "");
-    if (!/^[6-9]\d{9}$/.test(digits)) {
-      setError("Enter a valid 10-digit Indian mobile number");
-      return;
-    }
-    setLoading(true);
-    setError("");
-    const fullPhone = "+91" + digits;
-
-    const { data, error } = await supabase.auth.signInWithOtp({
-      phone: fullPhone,
-      options: { channel: "whatsapp" },
-    });
-
-    if (error) {
-      const map: Record<string, string> = {
-        "422": "Phone number format invalid. Must be +91XXXXXXXXXX",
-        "429": "Too many requests. Wait 60 seconds and try again.",
-        "500": "SMS provider error. Check logs.",
-        "400": "SMS provider not configured correctly.",
-      };
-      setError(
-        map[String(error.status)] ||
-          error.message ||
-          "Failed to send OTP. Please try again."
-      );
-    } else {
-      setScreen("otp");
-      startCountdown(60);
-    }
-    setLoading(false);
-  };
-
-  const handleVerifyOtp = async () => {
-    const otpString = otp.length === 6 ? otp : otp.replace(/\D/g, ''); // Ensure safe handling if coming from array
-    if (otpString.length !== 6) {
-      setOtpError("Enter the complete 6-digit code");
-      return;
-    }
-    setLoading(true);
-    setOtpError("");
-    const fullPhone = "+91" + phone.replace(/\D/g, "");
-
-    const { data, error } = await supabase.auth.verifyOtp({
-      phone: fullPhone,
-      token: otpString,
-      type: "sms",
-    });
-
-    if (error) {
-      setOtpError("Incorrect code. Please check and try again.");
-      setLoading(false);
-      return;
-    }
-
-    const { data: existingUser } = await supabase
-      .from("users")
-      .select("name, phone")
-      .eq("phone", fullPhone)
-      .single();
-
-    if (!existingUser) {
-      await supabase.from("users").insert({
-        phone: fullPhone,
-        name: "",
-        created_at: new Date().toISOString(),
-        last_login: new Date().toISOString(),
-        order_count: 0,
-      });
-      setScreen("name");
-    } else {
-      await supabase
-        .from("users")
-        .update({ last_login: new Date().toISOString() })
-        .eq("phone", fullPhone);
-      setUser({
-        phone: fullPhone,
-        name: existingUser.name,
-        isLoggedIn: true,
-      });
-
-      const redirect = localStorage.getItem("wellcare_redirect");
-      if (redirect) {
-        localStorage.removeItem("wellcare_redirect");
-        router.push(redirect);
-      } else {
-        router.push("/");
-      }
-    }
-    setLoading(false);
-  };
-
-  const handleSaveName = async () => {
-    if (!name.trim()) {
-      setError("Please enter your name");
-      return;
-    }
-    setLoading(true);
-    const fullPhone = "+91" + phone.replace(/\D/g, "");
-    await supabase
-      .from("users")
-      .update({ name: name.trim() })
-      .eq("phone", fullPhone);
-    setUser({ phone: fullPhone, name: name.trim(), isLoggedIn: true });
-    
-    // Welcome Toast simulation or real depending on implementation
-    alert("Welcome to Wellcare, " + name.trim() + "!");
-    
-    const redirect = localStorage.getItem("wellcare_redirect");
-    if (redirect) {
-      localStorage.removeItem("wellcare_redirect");
-      router.push(redirect);
-    } else {
-      router.push("/");
-    }
-    setLoading(false);
-  };
-
-  const handleOtpChange = (i: number, v: string) => {
-    if (!/^\d*$/.test(v)) return;
-    const a = (typeof otp === 'string' ? otp.split('') : otp || []).concat(Array(6).fill('')).slice(0, 6);
-    a[i] = v;
-    setOtp(a.join(""));
-    if (v && i < 5) refs.current[i + 1]?.focus();
-  };
-
-  const handleOtpKey = (i: number, e: React.KeyboardEvent) => {
-    if (e.key === "Backspace" && !otp[i] && i > 0) {
-      refs.current[i - 1]?.focus();
-      const a = (typeof otp === 'string' ? otp.split('') : otp || []).concat(Array(6).fill('')).slice(0, 6);
-      a[i - 1] = "";
-      setOtp(a.join(""));
-    }
-  };
-
-  const handleOtpPaste = (e: React.ClipboardEvent) => {
-    const p = e.clipboardData.getData("text").replace(/\D/g, "");
-    if (p.length === 6) {
-      setOtp(p);
-      refs.current[5]?.focus();
-    }
+  // Step 1: Send OTP
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (phone.length !== 10) {
+      setError("Please enter a valid 10-digit mobile number");
+      return;
+    }
+    setError("");
+    setLoading(true);
+
+    try {
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        phone: `+91${phone}`,
+        options: { channel: "whatsapp" },
+      });
+
+      if (otpError) throw otpError;
+      setStep(2);
+    } catch (err: any) {
+      setError(err.message || "Failed to send OTP. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 2: Verify OTP
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otp.length !== 6) {
+      setError("Enter 6-digit OTP");
+      return;
+    }
+    setError("");
+    setLoading(true);
+
+    try {
+      const { data, error: verifyError } = await supabase.auth.verifyOtp({
+        phone: `+91${phone}`,
+        token: otp,
+        type: "sms",
+      });
+
+      if (verifyError) throw verifyError;
+
+      // Check if user has a name in metadata
+      const user = data.user;
+      if (user?.user_metadata?.full_name) {
+        router.push(redirectPath);
+      } else {
+        setStep(3);
+      }
+    } catch (err: any) {
+      setError(err.message || "Invalid OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 3: Set Name
+  const handleSetName = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    setLoading(true);
+
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { full_name: name }
+      });
+
+      if (updateError) throw updateError;
+      
+      // Update users table
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('users').upsert({
+          id: user.id,
+          phone: user.phone,
+          name: name,
+          last_login: new Promise(resolve => resolve(new Date().toISOString()))
+        });
+      }
+
+      router.push(redirectPath);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div style={{
-      background: "linear-gradient(135deg, #030d06 0%, #0b3d12 40%, #0b6b1d 70%, #053d0d 100%)",
-      minHeight: "100vh",
-      position: "relative",
-      overflow: "hidden",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "20px"
-    }}>
-      {/* BACKGROUND ORBS */}
-      <div style={{
-        position: "absolute", inset: 0,
-        pointerEvents: "none", overflow: "hidden",
-      }}>
-        <div style={{
-          position: "absolute",
-          width: "600px", height: "600px",
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(46,133,52,0.4) 0%, transparent 70%)",
-          top: "-200px", right: "-100px",
-          filter: "blur(60px)",
-          animation: "floatOrb1 8s ease-in-out infinite",
-        }}/>
-        <div style={{
-          position: "absolute",
-          width: "400px", height: "400px",
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(157,248,152,0.25) 0%, transparent 70%)",
-          bottom: "-100px", left: "5%",
-          filter: "blur(50px)",
-          animation: "floatOrb2 10s ease-in-out infinite",
-        }}/>
-        <div style={{
-          position: "absolute",
-          width: "250px", height: "250px",
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)",
-          top: "40%", left: "40%",
-          filter: "blur(40px)",
-          animation: "floatOrb3 12s ease-in-out infinite",
-        }}/>
+    <div className="flex min-h-screen bg-black text-white font-sans overflow-hidden">
+      {/* Left Side: Nature Image */}
+      <div className="hidden lg:block lg:w-[60%] relative">
+        <Image
+          src="/images/nature-bg.png"
+          alt="Nature"
+          fill
+          className="object-cover brightness-75"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/10 to-black/30"></div>
+        {/* Branding Overlay */}
+        <div className="absolute top-12 left-12 z-20">
+          <Link href="/" className="flex items-center space-x-2">
+            <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <CheckCircle2 className="text-white" size={24} />
+            </div>
+            <span className="text-2xl font-bold tracking-tight text-white">Wellcare</span>
+          </Link>
+        </div>
       </div>
 
-      {/* THE GLASS LOGIN PANEL */}
-      <div style={{
-        maxWidth: "460px",
-        width: "100%",
-        background: "rgba(255, 255, 255, 0.10)",
-        backdropFilter: "blur(40px) saturate(200%)",
-        WebkitBackdropFilter: "blur(40px) saturate(200%)",
-        border: "1px solid rgba(255, 255, 255, 0.20)",
-        borderRadius: "28px",
-        padding: "52px 48px",
-        boxShadow: "0 40px 100px rgba(0,0,0,0.40), 0 20px 40px rgba(11,107,29,0.15), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.10)",
-        position: "relative",
-        zIndex: 10
-      }}>
-
-        {/* Logo */}
-        <div style={{ textAlign: "center", marginBottom: "36px" }}>
-          <img src="/logo.png" alt="Wellcare"
-            style={{ height: "44px", filter: "brightness(0) invert(1)", display: "inline-block" }}/>
-          <p style={{
-            color: "rgba(255,255,255,0.50)",
-            fontSize: "0.8rem",
-            marginTop: "8px",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-          }}>
-            Wellcare Pharmacy · Agra
-          </p>
+      {/* Right Side: Auth Form */}
+      <div className="w-full lg:w-[40%] flex flex-col justify-center px-8 sm:px-16 lg:px-20 relative bg-black">
+        {/* Mobile Header */}
+        <div className="lg:hidden absolute top-8 left-8">
+          <Link href="/" className="flex items-center space-x-2">
+            <CheckCircle2 className="text-emerald-500" size={32} />
+            <span className="text-xl font-bold">Wellcare</span>
+          </Link>
         </div>
 
-        {screen === "phone" && (
-          <>
-            <h1 style={{
-              fontFamily: "Manrope, sans-serif",
-              color: "white",
-              fontSize: "2rem",
-              fontWeight: 800,
-              marginBottom: "8px",
-              textAlign: "center",
-            }}>
-              Welcome Back
-            </h1>
-            <p style={{
-              color: "rgba(255,255,255,0.55)",
-              textAlign: "center",
-              fontSize: "0.95rem",
-              marginBottom: "40px",
-            }}>
-              Sign in to continue to Wellcare
-            </p>
+        <div className="max-w-md w-full mx-auto">
+          {/* Back Button */}
+          {step > 1 && (
+            <button 
+              onClick={() => setStep(step - 1)}
+              className="mb-8 flex items-center text-gray-400 hover:text-white transition-colors text-sm"
+            >
+              <ChevronLeft size={16} className="mr-1" />
+              Back
+            </button>
+          )}
 
-            {/* Phone input — glass input style */}
-            <label style={{ 
-              color: "rgba(255,255,255,0.70)", 
-              fontSize: "0.82rem", 
-              fontWeight: 500,
-              letterSpacing: "0.04em",
-              display: "block", 
-              marginBottom: "8px" 
-            }}>
-              MOBILE NUMBER
-            </label>
-            <div style={{
-              display: "flex",
-              background: "rgba(255,255,255,0.08)",
-              backdropFilter: "blur(10px)",
-              border: "1px solid rgba(255,255,255,0.18)",
-              borderRadius: "14px",
-              overflow: "hidden",
-              marginBottom: "8px",
-              transition: "all 0.2s ease",
-            }} className="focus-within:border-[rgba(157,248,152,0.60)] focus-within:shadow-[0_0_0_3px_rgba(157,248,152,0.10)]">
-              <div style={{
-                padding: "0 16px",
-                background: "rgba(157,248,152,0.10)",
-                borderRight: "1px solid rgba(255,255,255,0.12)",
-                display: "flex", alignItems: "center",
-                color: "#9df898",
-                fontSize: "0.95rem",
-                fontWeight: 600,
-                whiteSpace: "nowrap",
-              }}>
-                +91
-              </div>
-              <input
-                type="tel" inputMode="numeric" maxLength={10}
-                placeholder="Enter your number"
-                value={phone}
-                onChange={e => setPhone(e.target.value.replace(/\D/g,"").slice(0,10))}
-                onKeyDown={e => e.key === "Enter" && handleSendOtp()}
-                autoFocus
-                style={{
-                  flex: 1,
-                  background: "transparent",
-                  border: "none",
-                  outline: "none",
-                  color: "white",
-                  fontSize: "1.05rem",
-                  padding: "16px 20px",
-                  letterSpacing: "0.06em",
-                }}
-              />
-            </div>
+          <div className="mb-10">
+            <h1 className="text-4xl font-semibold mb-2 tracking-tight">Welcome back</h1>
+            <p className="text-gray-400 text-lg">Please enter your details.</p>
+          </div>
 
-            {error && (
-              <div style={{
-                background: "rgba(186,26,26,0.20)",
-                border: "1px solid rgba(186,26,26,0.40)",
-                borderRadius: "10px",
-                padding: "10px 14px",
-                marginBottom: "12px",
-                color: "#ffb4ab",
-                fontSize: "0.85rem",
-                display: "flex", alignItems: "center", gap: "8px",
-              }}>
-                <span className="material-symbols-outlined" style={{fontSize:"16px"}}>
-                  error
-                </span>
-                {error}
+          <form onSubmit={step === 1 ? handleSendOtp : step === 2 ? handleVerifyOtp : handleSetName} className="space-y-12">
+            {step === 1 && (
+              <div className="space-y-8">
+                <div className="group relative">
+                  <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1">Mobile Number</label>
+                  <div className="flex items-center border-b border-gray-800 group-focus-within:border-emerald-500 transition-colors py-2">
+                    <span className="text-gray-400 mr-2 font-medium">+91</span>
+                    <input
+                      type="tel"
+                      placeholder="Enter mobile number"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                      className="bg-transparent w-full focus:outline-none text-white text-lg placeholder:text-gray-700"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-sm">
+                  <label className="flex items-center space-x-2 cursor-pointer group">
+                    <div className="w-4 h-4 border border-gray-700 rounded flex items-center justify-center group-hover:border-emerald-500 transition-colors">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-sm scale-0 group-has-[:checked]:scale-100 transition-transform"></div>
+                    </div>
+                    <input type="checkbox" className="hidden" defaultChecked />
+                    <span className="text-gray-500 group-hover:text-gray-300">Remember me</span>
+                  </label>
+                  <button type="button" className="text-gray-500 hover:text-emerald-500 transition-colors">Forgot password?</button>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
+                >
+                  {loading ? (
+                    <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <span>Get OTP on WhatsApp</span>
+                      <MessageSquare size={18} />
+                    </>
+                  )}
+                </button>
               </div>
             )}
 
-            {/* Send OTP Button */}
-            <button
-              onClick={handleSendOtp}
-              disabled={loading || phone.length !== 10}
-              style={{
-                width: "100%",
-                padding: "17px",
-                background: phone.length === 10 && !loading
-                  ? "linear-gradient(135deg, #9df898 0%, #2e8534 100%)"
-                  : "rgba(255,255,255,0.10)",
-                color: phone.length === 10 && !loading ? "#003008" : "rgba(255,255,255,0.35)",
-                border: "1px solid rgba(255,255,255,0.15)",
-                borderRadius: "14px",
-                fontSize: "1rem",
-                fontWeight: 700,
-                cursor: phone.length === 10 ? "pointer" : "not-allowed",
-                marginTop: "8px",
-                marginBottom: "24px",
-                transition: "all 0.3s ease",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "10px",
-                letterSpacing: "0.02em",
-                boxShadow: phone.length === 10
-                  ? "0 8px 24px rgba(157,248,152,0.25)"
-                  : "none",
-              }}
-            >
-              {loading ? (
-                <>
-                  <div className="spinner" />
-                  Sending...
-                </>
-              ) : (
-                <>
-                  <span className="material-symbols-outlined" style={{fontSize:"20px"}}>
-                    chat
-                  </span>
-                  Send OTP via WhatsApp
-                </>
-              )}
-            </button>
+            {step === 2 && (
+              <div className="space-y-8">
+                <div className="group relative">
+                  <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1">Enter 6-digit OTP</label>
+                  <div className="border-b border-gray-800 group-focus-within:border-emerald-500 transition-colors py-2">
+                    <input
+                      type="text"
+                      placeholder="••••••"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      className="bg-transparent w-full focus:outline-none text-white text-3xl tracking-[0.5em] placeholder:text-gray-700 text-center"
+                      autoFocus
+                    />
+                  </div>
+                  <p className="mt-4 text-sm text-gray-500">
+                    Sent to +91 {phone}. <button type="button" onClick={() => setStep(1)} className="text-emerald-500 hover:underline">Change</button>
+                  </p>
+                </div>
 
-            {/* Divider */}
-            <div style={{
-              display: "flex", alignItems: "center", gap: "16px",
-              marginBottom: "24px",
-            }}>
-              <div style={{ flex:1, height:"1px", background:"rgba(255,255,255,0.10)" }}/>
-              <span style={{ color: "rgba(255,255,255,0.30)", fontSize: "0.8rem" }}>or</span>
-              <div style={{ flex:1, height:"1px", background:"rgba(255,255,255,0.10)" }}/>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
+                >
+                  {loading ? (
+                    <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <span>Verify & Continue</span>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="space-y-8">
+                <div className="group relative">
+                  <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1">Full Name</label>
+                  <div className="border-b border-gray-800 group-focus-within:border-emerald-500 transition-colors py-2">
+                    <input
+                      type="text"
+                      placeholder="Enter your full name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="bg-transparent w-full focus:outline-none text-white text-lg placeholder:text-gray-700"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-emerald-500 text-white font-bold py-4 rounded-xl hover:bg-emerald-600 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 shadow-lg shadow-emerald-500/20"
+                >
+                  {loading ? (
+                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <span>Complete Profile</span>
+                  )}
+                </button>
+              </div>
+            )}
+          </form>
+
+          {error && (
+            <div className="mt-8 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-sm">
+              {error}
             </div>
+          )}
 
-            {/* Sign up link */}
-            <p style={{
-              textAlign: "center",
-              color: "rgba(255,255,255,0.50)",
-              fontSize: "0.88rem",
-            }}>
-              New to Wellcare?{" "}
-              <Link href="/signup" style={{
-                color: "#9df898",
-                textDecoration: "none",
-                fontWeight: 600,
-              }}>
-                Create account →
+          <div className="mt-12 text-center">
+            <p className="text-gray-500">
+              Don&apos;t have an account?{" "}
+              <Link href="/signup" className="text-white font-semibold hover:text-emerald-500 transition-colors underline underline-offset-4">
+                Register here
               </Link>
             </p>
-          </>
-        )}
-
-        {screen === "otp" && (
-          <>
-            <h1 style={{ color:"white", fontFamily:"Manrope", 
-              fontSize:"1.8rem", fontWeight:800, textAlign:"center", 
-              marginBottom:"8px" }}>
-              Check WhatsApp
-            </h1>
-            <p style={{ color:"rgba(255,255,255,0.55)", textAlign:"center", 
-              marginBottom:"8px", fontSize:"0.95rem" }}>
-              We sent a 6-digit code to
-            </p>
-            <p style={{ color:"#9df898", textAlign:"center", 
-              fontWeight:600, marginBottom:"36px", fontSize:"1.05rem" }}>
-              +91 {phone}
-              <button onClick={() => setScreen("phone")} style={{
-                background:"none", border:"none", color:"rgba(255,255,255,0.40)",
-                cursor:"pointer", fontSize:"0.8rem", marginLeft:"12px",
-                textDecoration:"underline",
-              }}>
-                Change
-              </button>
-            </p>
-
-            {/* 6 OTP boxes */}
-            <div style={{ display:"flex", gap:"10px", 
-              justifyContent:"center", marginBottom:"24px" }}>
-              {[0,1,2,3,4,5].map(i => (
-                <input key={i} ref={el=> {refs.current[i]=el;}}
-                  type="tel" inputMode="numeric" maxLength={1}
-                  value={otp[i]||""}
-                  onChange={e=>handleOtpChange(i,e.target.value)}
-                  onKeyDown={e=>handleOtpKey(i,e)}
-                  onPaste={handleOtpPaste}
-                  style={{
-                    width:"52px", height:"60px",
-                    textAlign:"center",
-                    fontSize:"1.4rem", fontWeight: 700,
-                    background: otp[i] 
-                      ? "rgba(157,248,152,0.15)" 
-                      : "rgba(255,255,255,0.07)",
-                    backdropFilter: "blur(10px)",
-                    border: otpError
-                      ? "2px solid rgba(186,26,26,0.70)"
-                      : otp[i]
-                        ? "2px solid rgba(157,248,152,0.60)"
-                        : "1px solid rgba(255,255,255,0.18)",
-                    borderRadius: "14px",
-                    color: "white",
-                    outline: "none",
-                    transition: "all 0.2s ease",
-                  }}
-                  onFocus={e => { 
-                    e.target.style.border = "2px solid rgba(157,248,152,0.80)";
-                    e.target.style.boxShadow = "0 0 0 3px rgba(157,248,152,0.10)";
-                  }}
-                  onBlur={e => {
-                    e.target.style.border = otp[i] 
-                      ? "2px solid rgba(157,248,152,0.60)"
-                      : "1px solid rgba(255,255,255,0.18)";
-                    e.target.style.boxShadow = "none";
-                  }}
-                />
-              ))}
-            </div>
-
-            {otpError && (
-              <p style={{ color:"#ffb4ab", textAlign:"center", 
-                fontSize:"0.85rem", marginBottom:"12px" }}>
-                {otpError}
-              </p>
-            )}
-
-            <button onClick={handleVerifyOtp}
-              disabled={loading || otp.length !== 6}
-              style={{
-                width:"100%", padding:"17px",
-                background: otp.length===6 && !loading
-                  ? "linear-gradient(135deg, #9df898 0%, #2e8534 100%)"
-                  : "rgba(255,255,255,0.10)",
-                color: otp.length===6 ? "#003008" : "rgba(255,255,255,0.35)",
-                border:"none", borderRadius:"14px",
-                fontSize:"1rem", fontWeight:700, cursor:"pointer",
-                marginBottom:"20px",
-                transition: "all 0.3s ease",
-                boxShadow: otp.length===6 ? "0 8px 24px rgba(157,248,152,0.25)" : "none",
-              }}>
-              {loading ? "Verifying..." : "Verify & Continue →"}
-            </button>
-
-            <p style={{ textAlign:"center", fontSize:"0.85rem",
-              color:"rgba(255,255,255,0.40)" }}>
-              {countdown > 0
-                ? `Resend code in ${String(countdown).padStart(2,"0")}s`
-                : (
-                  <button onClick={handleSendOtp} style={{
-                    background:"none", border:"none",
-                    color:"#9df898", cursor:"pointer", fontWeight:600,
-                  }}>
-                    Resend OTP
-                  </button>
-                )
-              }
-            </p>
-          </>
-        )}
-
-        {screen === "name" && (
-          <>
-            <h1 style={{ color:"white", fontFamily:"Manrope",
-              fontSize:"2rem", fontWeight:800, textAlign:"center",
-              marginBottom:"8px" }}>
-              Almost there! 🎉
-            </h1>
-            <p style={{ color:"rgba(255,255,255,0.55)", textAlign:"center",
-              marginBottom:"36px" }}>
-              What should we call you?
-            </p>
-            <input type="text" placeholder="Your full name"
-              value={name} onChange={e=>setName(e.target.value)}
-              onKeyDown={e=>e.key==="Enter"&&handleSaveName()}
-              autoFocus
-              className="glass-input"
-              style={{
-                width:"100%", padding:"16px 20px",
-                fontSize:"1.05rem",
-                marginBottom:"20px", boxSizing:"border-box",
-              }}
-            />
-            <button onClick={handleSaveName} disabled={loading||!name.trim()}
-              className="glass-btn-primary"
-              style={{
-                width:"100%", padding:"17px",
-                fontSize:"1rem", fontWeight:700, cursor:"pointer",
-              }}>
-              {loading ? "Saving..." : "Get Started →"}
-            </button>
-          </>
-        )}
-
+          </div>
+        </div>
       </div>
     </div>
   );

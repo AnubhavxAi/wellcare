@@ -86,7 +86,7 @@ export default function Navbar() {
               }}
             />
             <span className="font-headline font-extrabold text-2xl lg:text-3xl text-primary tracking-tighter drop-shadow-sm group-hover:text-primary-container transition-colors">
-              WELLCARE
+              Wellcare Pharmacy
             </span>
           </Link>
 

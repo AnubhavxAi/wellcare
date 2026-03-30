@@ -1,4 +1,4 @@
-import { Product } from "./products";
+import { Product } from "@/types/product";
 
 export const newProducts: Product[] = [
   // ── MEDICINES (25 products) ──────────────────────────────────

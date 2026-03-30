@@ -1,211 +1,156 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Search, Upload, Truck, Tag } from "lucide-react";
-
-const slideContent = {
-  headline: "Your Health, Delivered Fast.",
-  subtext: "Order medicines, lab tests, and wellness essentials with free doorstep delivery across Agra.",
-};
+import { useState } from "react";
+import { Search, ChevronLeft, ChevronRight, CheckCircle, Truck, FileText, ShieldCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function Hero() {
+  const [isFocused, setIsFocused] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const router = useRouter();
 
   const handleSearch = () => {
     if (searchTerm.trim()) {
-      const el = document.getElementById("categories");
-      if (el) el.scrollIntoView({ behavior: "smooth" });
-      const url = new URL(window.location.href);
-      url.searchParams.set("search", searchTerm);
-      url.hash = "categories";
-      window.history.replaceState({}, "", url.toString());
-      window.dispatchEvent(new Event("popstate"));
+      router.push(`/?search=${encodeURIComponent(searchTerm)}#categories`);
     } else {
-      const el = document.getElementById("categories");
-      if (el) el.scrollIntoView({ behavior: "smooth" });
+      router.push(`/#categories`);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
     }
   };
 
   return (
-    <section 
-      style={{
-        background: "linear-gradient(135deg, #0b4d14 0%, #0b6b1d 25%, #1a8a2e 50%, #0d7a23 75%, #053d0d 100%)",
-        position: "relative",
-        overflow: "hidden",
-        minHeight: "100vh",
-        paddingTop: "100px", // Accommodate fixed navbar + extra space
-        paddingBottom: "48px",
-        display: "flex",
-        alignItems: "center",
-      }}
-    >
-      {/* FLOATING BACKGROUND ORBS */}
-      <div style={{
-        position: "absolute", inset: 0,
-        pointerEvents: "none", overflow: "hidden",
-      }}>
-        {/* Large orb top right */}
-        <div style={{
-          position: "absolute",
-          width: "600px", height: "600px",
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(46,133,52,0.4) 0%, transparent 70%)",
-          top: "-200px", right: "-100px",
-          filter: "blur(60px)",
-          animation: "floatOrb1 8s ease-in-out infinite",
-        }}/>
-        {/* Medium orb bottom left */}
-        <div style={{
-          position: "absolute",
-          width: "400px", height: "400px",
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(157,248,152,0.25) 0%, transparent 70%)",
-          bottom: "-100px", left: "5%",
-          filter: "blur(50px)",
-          animation: "floatOrb2 10s ease-in-out infinite",
-        }}/>
-        {/* Small orb center */}
-        <div style={{
-          position: "absolute",
-          width: "250px", height: "250px",
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)",
-          top: "40%", left: "40%",
-          filter: "blur(40px)",
-          animation: "floatOrb3 12s ease-in-out infinite",
-        }}/>
-      </div>
-
-      {/* FLOATING GRID LINES */}
-      <div style={{
-        position: "absolute", inset: 0,
-        backgroundImage: `
-          linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
-        `,
-        backgroundSize: "60px 60px",
-        pointerEvents: "none",
-      }}/>
-
-      <div className="max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
-        {/* LEFT COLUMN */}
-        <motion.div 
-          className="glass-card flex-1" 
-          style={{
-            padding: "48px",
-            maxWidth: "640px",
-          }}
-          initial={{ x: -50, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.6 }}
-        >
-          <h1 style={{
-            fontFamily: "Manrope, sans-serif",
-            fontSize: "clamp(2.5rem, 5vw, 4rem)",
-            fontWeight: 800,
-            color: "white",
-            lineHeight: 1.15,
-            letterSpacing: "-0.02em",
-            marginBottom: "20px",
-            textShadow: "0 2px 20px rgba(0,0,0,0.2)",
-          }}>
-            Your Health,<br/>
-            <span style={{ color: "#9df898" }}>Delivered Fast.</span>
-          </h1>
-          <p style={{
-            color: "rgba(255,255,255,0.80)",
-            fontSize: "1.125rem",
-            lineHeight: 1.7,
-            marginBottom: "36px",
-          }}>
-            Order medicines, lab tests, and wellness essentials 
-            with free doorstep delivery across Agra.
-          </p>
-
-          {/* GLASSMORPHISM SEARCH BAR */}
-          <div style={{
-            display: "flex",
-            background: "rgba(255,255,255,0.15)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            border: "1.5px solid rgba(255,255,255,0.40)",
-            borderRadius: "50px",
-            padding: "6px 6px 6px 24px",
-            gap: "8px",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.25)",
-            marginBottom: "28px",
-          }}>
-            <input
-              placeholder="Search medicines, lab tests..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              style={{
-                flex: 1,
-                background: "transparent",
-                border: "none",
-                outline: "none",
-                color: "white",
-                fontSize: "1rem",
-              }}
-              className="placeholder-white/60"
-            />
-            <button 
-              onClick={handleSearch}
-              style={{
-                background: "linear-gradient(135deg, #9df898, #2e8534)",
-                color: "#003008",
-                border: "none",
-                borderRadius: "50px",
-                padding: "12px 28px",
-                fontWeight: 700,
-                fontSize: "0.95rem",
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-              }}>
-              Search
-            </button>
+    <section className="bg-surface overflow-hidden pt-6 lg:pt-10 pb-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Main Banner Container */}
+        <div className="relative bg-gradient-to-br from-teal-800 to-emerald-600 rounded-[24px] overflow-hidden shadow-2xl">
+          
+          {/* Subtle Botanical Pattern SVG Overlay */}
+          <div className="absolute inset-0 opacity-10 pointer-events-none">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="leaf-pattern" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+                  <path d="M40 0 C48 16 64 24 80 40 C64 56 48 64 40 80 C32 64 16 56 0 40 C16 24 32 16 40 0 Z" fill="currentColor" />
+                </pattern>
+              </defs>
+              <rect x="0" y="0" width="100%" height="100%" fill="url(#leaf-pattern)" className="text-white" />
+            </svg>
           </div>
-        </motion.div>
 
-        {/* RIGHT COLUMN */}
-        <motion.div 
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-            gap: "16px",
-            maxWidth: "400px",
-            width: "100%",
-          }}
-          initial={{ x: 50, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
-          {[
-            { icon: "verified", title: "Genuine Medicines", sub: "100% Authentic" },
-            { icon: "local_shipping", title: "Fast Delivery", sub: "2-Hour Delivery" },
-            { icon: "labs", title: "Lab Reports", sub: "Home Collection" },
-            { icon: "lock", title: "Secure Payment", sub: "Safe Transactions" },
-          ].map((item, idx) => (
-            <div key={idx} className="glass-card p-5 text-center flex flex-col items-center justify-center">
-              <span className="material-symbols-outlined" style={{
-                fontSize: "32px",
-                color: "#9df898",
-                display: "block",
-                marginBottom: "10px",
-              }}>
-                {item.icon}
-              </span>
-              <p style={{ color: "white", fontWeight: 600, fontSize: "0.9rem" }}>
-                {item.title}
-              </p>
-              <p style={{ color: "rgba(255,255,255,0.65)", fontSize: "0.78rem" }}>
-                {item.sub}
-              </p>
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 min-h-[480px]">
+            
+            {/* Left Column */}
+            <div className="flex flex-col justify-center p-8 sm:p-12 lg:p-16 space-y-8">
+              <div className="space-y-4">
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight drop-shadow-md">
+                  Your Health,<br />Delivered Fast.
+                </h1>
+                <p className="text-lg md:text-xl text-teal-50 max-w-lg font-medium drop-shadow-sm">
+                  Order medicines, lab tests, and wellness essentials with free doorstep delivery across Agra.
+                </p>
+              </div>
+
+              {/* Glassmorphic Search Bar */}
+              <div 
+                className={`relative flex items-center bg-white/20 backdrop-blur-xl border border-white/40 p-2 rounded-[20px] shadow-xl transition-transform duration-300 ease-out ${isFocused ? 'scale-[1.02]' : ''}`}
+              >
+                <div className="pl-4 pr-2 flex items-center pointer-events-none text-white/80">
+                  <Search className="h-6 w-6" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search Medicines..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="w-full bg-transparent text-white placeholder-white/80 focus:outline-none text-lg py-3"
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                />
+                
+                {/* Vertical Chevrons container */}
+                <div className="hidden sm:flex flex-col space-y-1 mx-2">
+                   <button className="p-1 text-white/60 hover:text-white hover:bg-white/20 rounded-md transition-colors rotate-90" aria-label="Previous">
+                    <ChevronLeft size={16} />
+                  </button>
+                  <button className="p-1 text-white/60 hover:text-white hover:bg-white/20 rounded-md transition-colors rotate-90" aria-label="Next">
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+
+                <div className="ml-auto">
+                  <button 
+                    onClick={handleSearch}
+                    className="px-6 py-3 bg-teal-900 text-white font-bold rounded-2xl hover:bg-teal-950 transition-colors shadow-lg whitespace-nowrap"
+                  >
+                    Search
+                  </button>
+                </div>
+              </div>
             </div>
-          ))}
-        </motion.div>
+
+            {/* Right Column (Media) */}
+            <div className="relative hidden lg:block h-full min-h-[480px]">
+               {/* Doctor Image Cutout anchored to bottom right */}
+               <div className="absolute bottom-0 right-0 w-full h-[120%] flex items-end justify-end pointer-events-none">
+                  {/* Since image might not exist, provide an external transparent doctor layer or rely on local asset */}
+                  <img
+                    src="/images/doctor-hero.png"
+                    alt="Doctor holding tablet"
+                    className="object-contain object-bottom max-h-[105%] w-auto z-20"
+                    onError={(e) => {
+                      // Fallback transparent doctor png if local not found
+                      e.currentTarget.src = "https://cdn.pixabay.com/photo/2024/02/10/14/46/doctor-8564858_1280.png"
+                    }}
+                  />
+               </div>
+            </div>
+            
+          </div>
+        </div>
+
+        {/* Feature Cards Grid (Exactly Below Banner) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+          
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center space-y-3 transform transition-transform hover:-translate-y-1 hover:shadow-md cursor-default group">
+            <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 mb-2 group-hover:bg-emerald-100 transition-colors">
+              <CheckCircle size={24} />
+            </div>
+            <h3 className="font-bold text-gray-900 text-lg">Genuine Medicines</h3>
+            <p className="text-gray-500 text-sm">100% Authentic Products</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center space-y-3 transform transition-transform hover:-translate-y-1 hover:shadow-md cursor-default group">
+            <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 mb-2 group-hover:bg-indigo-100 transition-colors">
+              <Truck size={24} />
+            </div>
+            <h3 className="font-bold text-gray-900 text-lg">Fast Delivery</h3>
+            <p className="text-gray-500 text-sm">Quick Doorstep Service</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center space-y-3 transform transition-transform hover:-translate-y-1 hover:shadow-md cursor-default group">
+            <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center text-amber-600 mb-2 group-hover:bg-amber-100 transition-colors">
+              <FileText size={24} />
+            </div>
+            <h3 className="font-bold text-gray-900 text-lg">Lab Reports</h3>
+            <p className="text-gray-500 text-sm">Accurate & Reliable</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center space-y-3 transform transition-transform hover:-translate-y-1 hover:shadow-md cursor-default group">
+            <div className="w-12 h-12 bg-rose-50 rounded-full flex items-center justify-center text-rose-600 mb-2 group-hover:bg-rose-100 transition-colors">
+              <ShieldCheck size={24} />
+            </div>
+            <h3 className="font-bold text-gray-900 text-lg">Secure Payments</h3>
+            <p className="text-gray-500 text-sm">Safe Transactions</p>
+          </div>
+
+        </div>
+
       </div>
     </section>
   );

@@ -1,4 +1,3 @@
-import AnnouncementBar from "@/components/AnnouncementBar";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import TrustBadges from "@/components/TrustBadges";
@@ -14,7 +13,6 @@ import WhatsAppFAB from "@/components/WhatsAppFAB";
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
-      <AnnouncementBar />
       <Navbar />
       <main className="flex-grow pt-16">
         <Hero />

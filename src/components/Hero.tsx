@@ -42,18 +42,54 @@ export default function Hero() {
             </svg>
           </div>
 
-          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 min-h-[480px]">
+          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12 min-h-[480px] p-8 sm:p-12 lg:p-16">
             
             {/* Left Column */}
-            <div className="flex flex-col justify-center p-8 sm:p-12 lg:p-16 space-y-8">
-              <div className="space-y-4">
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight drop-shadow-md">
-                  Your Health,<br />Delivered Fast.
-                </h1>
-                <p className="text-lg md:text-xl text-teal-50 max-w-lg font-medium drop-shadow-sm">
-                  Order medicines, lab tests, and wellness essentials with free doorstep delivery across Agra.
-                </p>
-              </div>
+            <div className="flex flex-col justify-center space-y-6">
+              <h1 style={{
+                fontFamily: "Manrope, sans-serif",
+                fontWeight: 800,
+                lineHeight: 1.12,
+                letterSpacing: "-0.025em",
+              }}>
+                <span style={{
+                  display: "block",
+                  color: "rgba(255,255,255,0.85)",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  fontSize: "1rem",
+                  letterSpacing: "0.14em",
+                  marginBottom: "8px",
+                }}>
+                  AGRA'S MOST TRUSTED PHARMACY
+                </span>
+                <span style={{
+                  display: "block",
+                  fontSize: "clamp(2.8rem, 6vw, 4.5rem)",
+                  color: "white",
+                  fontWeight: 900,
+                  lineHeight: 1.05,
+                }}>
+                  Medicines
+                  <br/>
+                  <span style={{ color: "#9df898" }}>Delivered</span>
+                  <br/>
+                  in 2 Hours.
+                </span>
+              </h1>
+
+              <p style={{
+                color: "rgba(255,255,255,0.72)",
+                fontSize: "1.1rem",
+                lineHeight: 1.75,
+                maxWidth: "480px",
+                marginTop: "20px",
+                marginBottom: "36px",
+              }}>
+                Genuine medicines, lab tests at home, and health essentials
+                — delivered to every corner of Agra. No queues. No waiting.
+                Order now and track your delivery in real time.
+              </p>
 
               {/* Glassmorphic Search Bar */}
               <div 
@@ -92,64 +128,121 @@ export default function Hero() {
                   </button>
                 </div>
               </div>
+
+              {/* CTA Buttons */}
+              <div style={{ display:"flex", gap:"12px", flexWrap:"wrap", marginTop:"16px" }}>
+                <a href="/shop" style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "14px 28px",
+                  background: "linear-gradient(135deg, #9df898 0%, #2e8534 100%)",
+                  color: "#002d06",
+                  borderRadius: "50px",
+                  fontWeight: 700,
+                  fontSize: "0.95rem",
+                  textDecoration: "none",
+                  boxShadow: "0 8px 28px rgba(157,248,152,0.30)",
+                  transition: "all 0.25s ease",
+                }}>
+                  <span className="material-symbols-outlined" style={{fontSize:"18px"}}>
+                    medication
+                  </span>
+                  Order Medicines
+                </a>
+                <a href="/lab-tests" style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "14px 28px",
+                  background: "rgba(255,255,255,0.14)",
+                  backdropFilter: "blur(12px)",
+                  color: "white",
+                  border: "1.5px solid rgba(255,255,255,0.32)",
+                  borderRadius: "50px",
+                  fontWeight: 600,
+                  fontSize: "0.95rem",
+                  textDecoration: "none",
+                  transition: "all 0.25s ease",
+                }}>
+                  <span className="material-symbols-outlined" style={{fontSize:"18px"}}>
+                    science
+                  </span>
+                  Book Lab Test
+                </a>
+              </div>
+
+              {/* Trust Line */}
+              <p style={{
+                color: "rgba(255,255,255,0.45)",
+                fontSize: "0.78rem",
+                marginTop: "20px",
+                display: "flex",
+                alignItems: "center",
+                gap: "16px",
+                flexWrap: "wrap",
+              }}>
+                <span>✓ 500+ medicines in stock</span>
+                <span>✓ Delivers across all Agra localities</span>
+                <span>✓ COD available</span>
+              </p>
+
             </div>
 
             {/* Right Column (Media) */}
-            <div className="relative hidden lg:block h-full min-h-[480px]">
-               {/* Doctor Image Cutout anchored to bottom right */}
-               <div className="absolute bottom-0 right-0 w-full h-[120%] flex items-end justify-end pointer-events-none">
-                  {/* Since image might not exist, provide an external transparent doctor layer or rely on local asset */}
-                  <img
-                    src="/images/doctor-hero.png"
-                    alt="Doctor holding tablet"
-                    className="object-contain object-bottom max-h-[105%] w-auto z-20"
-                    onError={(e) => {
-                      // Fallback transparent doctor png if local not found
-                      e.currentTarget.src = "https://cdn.pixabay.com/photo/2024/02/10/14/46/doctor-8564858_1280.png"
-                    }}
-                  />
-               </div>
+            <div className="hidden md:block w-full h-full relative min-h-[400px]">
+              <div style={{ position:"relative", borderRadius:"24px", overflow:"hidden", width:"100%", height:"100%" }}>
+                {/* Gradient overlay — left edge fades to background */}
+                <div style={{
+                  position:"absolute", inset:0,
+                  background:"linear-gradient(90deg, #0b6b1d 0%, transparent 40%)",
+                  zIndex:1,
+                }}/>
+                <img 
+                  src="/hero-image.png"
+                  alt="Wellcare Pharmacy Agra — Medicine Delivery"
+                  onError={e => {
+                    e.currentTarget.src = "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&q=80&w=800";
+                  }}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    minHeight: "400px",
+                    objectFit: "cover",
+                    borderRadius: "24px",
+                    display: "block",
+                  }}
+                />
+                {/* Floating pill badge on image */}
+                <div style={{
+                  position:"absolute", bottom:"20px", left:"20px",
+                  zIndex:2,
+                  background:"rgba(255,255,255,0.18)",
+                  backdropFilter:"blur(16px)",
+                  border:"1px solid rgba(255,255,255,0.35)",
+                  borderRadius:"50px",
+                  padding:"10px 18px",
+                  display:"flex", alignItems:"center", gap:"10px",
+                }}>
+                  <div style={{
+                    width:"10px", height:"10px",
+                    borderRadius:"50%", background:"#9df898",
+                    boxShadow:"0 0 0 4px rgba(157,248,152,0.25)",
+                    animation:"pulse 2s ease-in-out infinite",
+                  }}/>
+                  <span style={{
+                    color:"white", fontSize:"0.82rem", fontWeight:600,
+                  }}>
+                    Delivering now across Agra
+                  </span>
+                </div>
+              </div>
             </div>
             
           </div>
         </div>
 
-        {/* Feature Cards Grid (Exactly Below Banner) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
-          
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center space-y-3 transform transition-transform hover:-translate-y-1 hover:shadow-md cursor-default group">
-            <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 mb-2 group-hover:bg-emerald-100 transition-colors">
-              <CheckCircle size={24} />
-            </div>
-            <h3 className="font-bold text-gray-900 text-lg">Genuine Medicines</h3>
-            <p className="text-gray-500 text-sm">100% Authentic Products</p>
-          </div>
 
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center space-y-3 transform transition-transform hover:-translate-y-1 hover:shadow-md cursor-default group">
-            <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 mb-2 group-hover:bg-indigo-100 transition-colors">
-              <Truck size={24} />
-            </div>
-            <h3 className="font-bold text-gray-900 text-lg">Fast Delivery</h3>
-            <p className="text-gray-500 text-sm">Quick Doorstep Service</p>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center space-y-3 transform transition-transform hover:-translate-y-1 hover:shadow-md cursor-default group">
-            <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center text-amber-600 mb-2 group-hover:bg-amber-100 transition-colors">
-              <FileText size={24} />
-            </div>
-            <h3 className="font-bold text-gray-900 text-lg">Lab Reports</h3>
-            <p className="text-gray-500 text-sm">Accurate & Reliable</p>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center space-y-3 transform transition-transform hover:-translate-y-1 hover:shadow-md cursor-default group">
-            <div className="w-12 h-12 bg-rose-50 rounded-full flex items-center justify-center text-rose-600 mb-2 group-hover:bg-rose-100 transition-colors">
-              <ShieldCheck size={24} />
-            </div>
-            <h3 className="font-bold text-gray-900 text-lg">Secure Payments</h3>
-            <p className="text-gray-500 text-sm">Safe Transactions</p>
-          </div>
-
-        </div>
 
       </div>
     </section>

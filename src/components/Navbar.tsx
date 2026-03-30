@@ -11,7 +11,6 @@ import { useAuth } from "@/context/AuthContext";
 const navLinks = [
   { name: "Medicines", href: "#categories" },
   { name: "Lab Tests", href: "#lab-tests" },
-  { name: "Wellness", href: "#" },
   { name: "Offers", href: "#" },
   { name: "Upload Rx", href: "#prescription-upload" },
 ];

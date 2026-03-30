@@ -1,4 +1,5 @@
 import { Product, CategoryKey } from "@/types/product";
+export type { Product, CategoryKey };
 
 export const categoryIcons: Record<Exclude<CategoryKey, "All">, string> = {
   "Medicines": "💊",

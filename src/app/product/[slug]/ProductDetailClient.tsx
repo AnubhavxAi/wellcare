@@ -201,7 +201,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               )}
               {activeTab === "benefits" && (
                 <div className="flex flex-col gap-4">
-                  {product.benefits.map((b, i) => (
+                  {product.benefits.map((b: string, i: number) => (
                     <div key={i} className="flex gap-3 items-start">
                       <div className="w-6 h-6 rounded-full bg-primary-fixed flex items-center justify-center flex-shrink-0 mt-0.5">
                         <span className="material-symbols-outlined text-sm text-primary">check</span>
@@ -213,7 +213,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               )}
               {activeTab === "usage" && (
                 <div className="flex flex-col gap-4">
-                  {product.howToUse.map((step, i) => (
+                  {product.howToUse.map((step: string, i: number) => (
                     <div key={i} className="flex gap-4 items-start">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-container text-white font-bold text-sm flex items-center justify-center flex-shrink-0">
                         {i + 1}
@@ -225,7 +225,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               )}
               {activeTab === "ingredients" && (
                 <div className="flex flex-wrap gap-2">
-                  {product.ingredients.map((ing, i) => (
+                  {product.ingredients.map((ing: string, i: number) => (
                     <span key={i} className="px-4 py-2 bg-secondary-fixed text-on-secondary-fixed rounded-full text-sm font-medium">
                       {ing}
                     </span>

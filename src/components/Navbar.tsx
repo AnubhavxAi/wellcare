@@ -9,10 +9,10 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 
 const navLinks = [
-  { name: "Medicines", href: "#categories" },
-  { name: "Lab Tests", href: "#lab-tests" },
-  { name: "Offers", href: "#" },
-  { name: "Upload Rx", href: "#prescription-upload" },
+  { name: "Shop", href: "/shop" },
+  { name: "Lab Tests", href: "/lab-tests" },
+  { name: "Privacy", href: "/privacy-policy" },
+  { name: "Terms", href: "/terms-of-service" },
 ];
 
 export default function Navbar() {
@@ -84,18 +84,22 @@ export default function Navbar() {
                 e.currentTarget.nextElementSibling?.classList.remove('hidden');
               }}
             />
-            <span className="font-headline font-extrabold text-2xl lg:text-3xl text-primary tracking-tighter drop-shadow-sm group-hover:text-primary-container transition-colors">
-              Wellcare Pharmacy
-            </span>
+              <span className={`font-headline font-extrabold text-2xl lg:text-3xl tracking-tighter transition-colors ${
+                isScrolled ? "text-primary" : "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]"
+              }`}>
+                Wellcare Pharmacy
+              </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex space-x-6 xl:space-x-8">
+          <nav className="hidden md:flex items-center space-x-6 xl:space-x-8 ml-8">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.name}
                 href={link.href}
-                className="relative text-gray-700 hover:text-gray-900 font-medium py-2 transition-colors text-sm"
+                className={`relative font-bold py-2 transition-all text-sm tracking-wide ${
+                  isScrolled ? "text-on-surface hover:text-primary" : "text-white hover:text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]"
+                }`}
                 onMouseEnter={() => setHoveredLink(link.name)}
                 onMouseLeave={() => setHoveredLink(null)}
               >
@@ -103,13 +107,13 @@ export default function Navbar() {
                 {hoveredLink === link.name && (
                   <motion.div
                     layoutId="navbar-underline"
-                    className="absolute left-0 right-0 bottom-0 h-0.5 bg-[var(--color-brand-green)]"
+                    className="absolute left-0 right-0 -bottom-1 h-0.5 bg-[var(--color-primary-fixed)] shadow-[0_0_8px_rgba(157,248,152,0.5)]"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   />
                 )}
-              </a>
+              </Link>
             ))}
           </nav>
 
@@ -208,8 +212,9 @@ export default function Navbar() {
 
             {/* Mobile menu button */}
             <button
-              className="lg:hidden p-2 text-gray-700 hover:text-gray-900"
+              className="md:hidden p-2 transition-colors"
               onClick={() => setIsMobileMenuOpen(true)}
+              style={{ color: isScrolled ? "var(--color-on-surface)" : "white" }}
             >
               <Menu size={22} />
             </button>
@@ -225,7 +230,7 @@ export default function Navbar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.5 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black z-40 lg:hidden"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
               onClick={() => setIsMobileMenuOpen(false)}
             />
             <motion.div
@@ -233,7 +238,7 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-16 right-0 h-[calc(100%-4rem)] w-72 bg-white z-[60] shadow-xl flex flex-col pt-6 px-6 lg:hidden"
+              className="fixed top-16 right-0 h-[calc(100%-4rem)] w-72 bg-white z-[60] shadow-2xl flex flex-col pt-6 px-6 md:hidden"
             >
               <button
                 className="absolute top-5 right-5 p-2 text-gray-700 hover:text-gray-900"

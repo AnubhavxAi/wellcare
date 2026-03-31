@@ -12,7 +12,7 @@ import { useProducts } from "@/hooks/useProducts";
 
 function ProductCategoriesContent() {
   const router = useRouter();
-  const [activeCategory, setActiveCategory] = useState<CategoryKey>("Medicines");
+  const [activeCategory, setActiveCategory] = useState<CategoryKey>("All");
   const { products, loading } = useProducts({ category: activeCategory });
   const { addToCart } = useCart();
 
@@ -27,10 +27,10 @@ function ProductCategoriesContent() {
     return (activeCategory === "All" 
       ? mergedProducts 
       : mergedProducts.filter((p) => p.category === activeCategory)
-    ).slice(0, 8);
+    ).slice(0, 12);
   }, [activeCategory, products, localProducts]);
 
-  const displayCategories = categories.filter(c => c !== "All");
+  const displayCategories = categories;
 
   return (
     <section id="categories" className="py-20 bg-surface-container-low">
@@ -38,7 +38,7 @@ function ProductCategoriesContent() {
         {/* Header */}
         <div className="mb-10">
           <h2 className="font-headline text-4xl font-extrabold text-on-surface tracking-tight mb-3">
-            Essential <span className="text-primary">Medicines</span>
+            Healthcare <span className="text-primary">Essentials</span>
           </h2>
           <p className="text-on-surface-variant text-lg max-w-2xl leading-relaxed">
             Curated pharmaceutical essentials delivered with clinical precision.

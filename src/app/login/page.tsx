@@ -90,7 +90,7 @@ function LoginContent() {
       });
 
       if (updateError) throw updateError;
-      
+
       // Update users table
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -146,7 +146,7 @@ function LoginContent() {
         <div className="max-w-md w-full mx-auto">
           {/* Back Button */}
           {step > 1 && (
-            <button 
+            <button
               onClick={() => setStep(step - 1)}
               className="mb-8 flex items-center text-gray-400 hover:text-white transition-colors text-sm"
             >

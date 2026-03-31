@@ -287,14 +287,14 @@ export default function Navbar() {
 
               <nav className="flex flex-col space-y-1">
                 {navLinks.map((link) => (
-                  <a
+                  <Link
                     key={link.name}
                     href={link.href}
                     className="text-base font-medium text-gray-800 hover:text-[var(--color-brand-green)] hover:bg-green-50 transition-colors px-4 py-3 rounded-xl"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {link.name}
-                  </a>
+                  </Link>
                 ))}
               </nav>
             </motion.div>

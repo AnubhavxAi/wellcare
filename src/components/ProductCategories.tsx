@@ -17,9 +17,18 @@ function ProductCategoriesContent() {
   const { addToCart } = useCart();
 
   const filteredProducts = useMemo(() => {
-    const sourceProducts = products.length > 0 ? products : localProducts;
-    return (activeCategory === "All" ? sourceProducts : sourceProducts.filter((p) => p.category === activeCategory)).slice(0, 8);
-  }, [activeCategory, products]);
+    // Merge remote products with local defaults to ensure all 152 exist
+    // Remote products take precedence for real-time pricing/stock
+    const mergedProducts = [...localProducts].map(lp => {
+      const remote = (products || []).find(rp => rp.slug === lp.slug);
+      return remote ? { ...lp, ...remote } : lp;
+    });
+
+    return (activeCategory === "All" 
+      ? mergedProducts 
+      : mergedProducts.filter((p) => p.category === activeCategory)
+    ).slice(0, 8);
+  }, [activeCategory, products, localProducts]);
 
   const displayCategories = categories.filter(c => c !== "All");
 

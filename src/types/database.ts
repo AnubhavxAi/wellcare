@@ -16,6 +16,14 @@ export interface Product {
   form?: string;
   requires_prescription: boolean;
   in_stock: boolean;
+  saltComposition?: string;
+  manufacturer?: string;
+  storageInstructions?: string;
+  sideEffects?: string[];
+  contraindications?: string[];
+  drugInteractions?: string[];
+  ageGroup?: string;
+  warning?: string;
   // Aliases for frontend compatibility
   imageSrc?: string;
   rxRequired?: boolean;

@@ -39,6 +39,14 @@ export function useProducts(options: { category?: string; limit?: number } = {})
           originalPrice: p.mrp,
           inStock: p.in_stock,
           packSize: p.unit,
+          saltComposition: p.saltComposition,
+          manufacturer: p.manufacturer,
+          storageInstructions: p.storageInstructions,
+          sideEffects: p.sideEffects,
+          contraindications: p.contraindications,
+          drugInteractions: p.drugInteractions,
+          ageGroup: p.ageGroup,
+          warning: p.warning,
         }));
         setProducts(mapped);
       }
@@ -73,6 +81,14 @@ export function useProduct(slug: string) {
           originalPrice: data.mrp,
           inStock: data.in_stock,
           packSize: data.unit,
+          saltComposition: data.saltComposition,
+          manufacturer: data.manufacturer,
+          storageInstructions: data.storageInstructions,
+          sideEffects: data.sideEffects,
+          contraindications: data.contraindications,
+          drugInteractions: data.drugInteractions,
+          ageGroup: data.ageGroup,
+          warning: data.warning,
         });
       } else {
         setProduct(null);

@@ -47,13 +47,19 @@ export default function ShopPageClient({ initialCategory = "All" }: ShopPageClie
   const displayCategories = categories.filter(c => c !== "All");
 
   const filteredAndSortedProducts = useMemo(() => {
-    const sourceProducts = products.length > 0 ? products : localProducts;
-    let result = sourceProducts.filter(p => activeCategory === "All" || p.category === activeCategory);
+    // Merge remote products with local defaults to ensure all 152 exist
+    // Remote products take precedence for real-time pricing/stock
+    const mergedProducts = [...localProducts].map(lp => {
+      const remote = products.find(rp => rp.slug === lp.slug);
+      return remote ? { ...lp, ...remote } : lp;
+    });
+
+    let result = mergedProducts.filter(p => activeCategory === "All" || p.category === activeCategory);
     if (sortBy === "price-low") result = [...result].sort((a, b) => a.price - b.price);
     else if (sortBy === "price-high") result = [...result].sort((a, b) => b.price - a.price);
     else if (sortBy === "name") result = [...result].sort((a, b) => a.name.localeCompare(b.name));
     return result;
-  }, [products, activeCategory, sortBy]);
+  }, [products, localProducts, activeCategory, sortBy]);
 
   const handleCategoryClick = (cat: CategoryKey) => {
     setActiveCategory(cat);

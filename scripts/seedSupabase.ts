@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { allProducts } from "../src/data/products";
+import { ALL_PRODUCTS as allProducts } from "../src/data/allProducts";
 import * as dotenv from "dotenv";
 import * as path from "path";
 
@@ -40,6 +40,14 @@ async function seed() {
         form:          p.form || "",
         requires_prescription: p.rxRequired || false,
         in_stock:      true,
+        saltComposition: p.saltComposition || null,
+        manufacturer:  p.manufacturer || null,
+        storageInstructions: p.storageInstructions || null,
+        sideEffects:   p.sideEffects || [],
+        contraindications: p.contraindications || [],
+        drugInteractions: p.drugInteractions || [],
+        ageGroup:      p.ageGroup || null,
+        warning:       p.warning || null,
       })),
       { onConflict: "slug" }
     );

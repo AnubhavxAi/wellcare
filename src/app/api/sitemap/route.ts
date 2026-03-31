@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { allProducts } from "@/data/products";
+import { ALL_PRODUCTS as allProducts } from "@/data/allProducts";
 
 export async function GET() {
   const baseUrl = "https://wellcare-pharmacy-76524.vercel.app";

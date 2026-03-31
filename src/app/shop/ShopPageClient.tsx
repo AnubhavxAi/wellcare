@@ -7,7 +7,9 @@ import { useCart } from "@/context/CartContext";
 import SmartProductImage from "@/components/SmartProductImage";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { categories, type CategoryKey, allProducts as localProducts } from "@/data/products";
+import { categories } from "@/data/products";
+import { type CategoryKey } from "@/types/product";
+import { ALL_PRODUCTS as localProducts } from "@/data/allProducts";
 
 const categoryIcons: Record<string, string> = {
   "All": "apps",

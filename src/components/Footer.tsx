@@ -1,4 +1,5 @@
 import { Phone, MapPin, Mail, Clock } from "lucide-react";
+import Link from "next/link";
 
 const categoryLinks = [
   "Medicines",
@@ -11,11 +12,12 @@ const categoryLinks = [
 ];
 
 const quickLinks = [
-  { name: "Home", href: "#" },
-  { name: "Shop Medicines", href: "#categories" },
-  { name: "Lab Tests", href: "#lab-tests" },
-  { name: "Upload Prescription", href: "#prescription-upload" },
-  { name: "Health Blog", href: "#blog" },
+  { name: "Home", href: "/" },
+  { name: "Shop Medicines", href: "/shop" },
+  { name: "Lab Tests", href: "/#lab-tests" },
+  { name: "Privacy Policy", href: "/privacy-policy" },
+  { name: "Terms of Service", href: "/terms-of-service" },
+  { name: "Refund Policy", href: "/refund-policy" },
 ];
 
 export default function Footer() {
@@ -55,13 +57,13 @@ export default function Footer() {
           <h3 className="text-base font-bold mb-4 text-white">Quick Links</h3>
           <nav className="flex flex-col space-y-2.5">
             {quickLinks.map((link) => (
-              <a
+              <Link
                 key={link.name}
                 href={link.href}
                 className="text-sm text-gray-400 hover:text-[var(--color-brand-green)] transition-colors inline-block w-fit"
               >
                 {link.name}
-              </a>
+              </Link>
             ))}
           </nav>
         </div>
@@ -146,7 +148,8 @@ export default function Footer() {
               &copy; {new Date().getFullYear()} Wellcare Pharmacy. All rights
               reserved.
             </p>
-            <p className="mt-0.5">Drug License No. UP/AG/2024/001234</p>
+            <p className="mt-1 font-medium">Drug License No. UP/AG/2024/001234</p>
+            <p className="mt-0.5">GSTIN: Pending Registration</p>
           </div>
         </div>
       </div>

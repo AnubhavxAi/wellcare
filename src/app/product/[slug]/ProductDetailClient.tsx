@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Product, allProducts } from "@/data/products";
+import { Product } from "@/types/product";
+import { ALL_PRODUCTS as allProducts } from "@/data/allProducts";
 import { useCart } from "@/context/CartContext";
 import SmartProductImage from "@/components/SmartProductImage";
 import Navbar from "@/components/Navbar";
@@ -17,7 +18,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   const router = useRouter();
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState<"description" | "benefits" | "usage" | "ingredients">("description");
+  const [activeTab, setActiveTab] = useState<"description" | "benefits" | "usage" | "ingredients" | "safety">("description");
 
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -81,8 +82,25 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               {product.name}
             </h1>
 
+            {/* Salt Composition */}
+            {product.saltComposition && (
+              <p className="text-sm text-on-surface-variant mb-2">
+                <strong className="text-on-surface">Salt: </strong>
+                {product.saltComposition}
+              </p>
+            )}
+
             {/* Brand */}
-            <p className="text-on-surface-variant font-medium mb-4">{product.brand}</p>
+            <p className="text-on-surface-variant font-medium mb-1">{product.brand}</p>
+
+            {/* Manufacturer */}
+            {product.manufacturer ? (
+              <p className="text-xs text-on-surface-variant mb-4">
+                By {product.manufacturer}
+              </p>
+            ) : (
+              <div className="mb-4"></div>
+            )}
 
             {/* Price */}
             <div className="flex items-end gap-3 mb-2">
@@ -180,15 +198,15 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
         {/* Tabs Section */}
         <div className="bg-surface-container-low rounded-xl p-8 mt-12">
-          <div className="flex gap-1 bg-surface-container rounded-full p-1 w-fit mb-8">
-            {(["description", "benefits", "usage", "ingredients"] as const).map((tab) => (
+          <div className="flex gap-1 bg-surface-container rounded-full p-1 w-fit mb-8 overflow-x-auto">
+            {(["description", "benefits", "usage", "ingredients", "safety"] as const).map((tab) => (
               <button key={tab} onClick={() => setActiveTab(tab)}
-                className={`px-5 py-2 rounded-full text-sm font-semibold transition-all capitalize ${
+                className={`px-5 py-2 rounded-full text-sm font-semibold transition-all capitalize whitespace-nowrap ${
                   activeTab === tab
                     ? "bg-surface-container-lowest text-on-surface shadow-[0_4px_20px_rgba(25,28,28,0.06)]"
                     : "text-on-surface-variant hover:text-on-surface"
                 }`}>
-                {tab === "usage" ? "How to Use" : tab === "benefits" ? "Key Benefits" : tab}
+                {tab === "usage" ? "How to Use" : tab === "benefits" ? "Key Benefits" : tab === "safety" ? "Safety Info" : tab}
               </button>
             ))}
           </div>
@@ -230,6 +248,130 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                       {ing}
                     </span>
                   ))}
+                </div>
+              )}
+              {activeTab === "safety" && (
+                <div className="flex flex-col gap-4">
+                  {/* Salt Composition */}
+                  {product.saltComposition && (
+                    <div style={{marginBottom:"20px", padding:"14px", 
+                      background:"#f0fdf4", borderRadius:"12px"}}>
+                      <p style={{fontSize:"0.8rem", color:"#6B7280", marginBottom:"4px",
+                        textTransform:"uppercase", letterSpacing:"0.06em"}}>
+                        Salt / Composition
+                      </p>
+                      <p style={{color:"#191c1c", fontWeight:500}}>
+                        {product.saltComposition}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Side Effects */}
+                  {product.sideEffects && product.sideEffects.length > 0 && (
+                    <div style={{marginBottom:"20px"}}>
+                      <h4 style={{fontFamily:"Manrope,sans-serif", fontWeight:700,
+                        color:"#9d365f", marginBottom:"10px", display:"flex",
+                        alignItems:"center", gap:"8px"}}>
+                        <span className="material-symbols-outlined" 
+                          style={{fontSize:"18px"}}>warning</span>
+                        Possible Side Effects
+                      </h4>
+                      <div style={{display:"flex", flexWrap:"wrap", gap:"8px"}}>
+                        {product.sideEffects.map((se, i) => (
+                          <span key={i} style={{padding:"6px 14px",
+                            background:"#ffd9e2", color:"#822049",
+                            borderRadius:"50px", fontSize:"0.82rem", fontWeight:500}}>
+                            {se}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Contraindications */}
+                  {product.contraindications && product.contraindications.length > 0 && (
+                    <div style={{marginBottom:"20px"}}>
+                      <h4 style={{fontFamily:"Manrope,sans-serif", fontWeight:700,
+                        color:"#ba1a1a", marginBottom:"10px", display:"flex",
+                        alignItems:"center", gap:"8px"}}>
+                        <span className="material-symbols-outlined"
+                          style={{fontSize:"18px"}}>do_not_disturb</span>
+                        Do Not Use If
+                      </h4>
+                      {product.contraindications.map((ci, i) => (
+                        <div key={i} style={{display:"flex", gap:"8px", 
+                          marginBottom:"6px", alignItems:"flex-start"}}>
+                          <span className="material-symbols-outlined"
+                            style={{color:"#ba1a1a", fontSize:"16px", flexShrink:0}}>
+                            close
+                          </span>
+                          <span style={{color:"#40493d", fontSize:"0.9rem"}}>{ci}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Drug Interactions */}
+                  {product.drugInteractions && product.drugInteractions.length > 0 && (
+                    <div style={{marginBottom:"20px"}}>
+                      <h4 style={{fontFamily:"Manrope,sans-serif", fontWeight:700,
+                        color:"#854f0b", marginBottom:"10px", display:"flex",
+                        alignItems:"center", gap:"8px"}}>
+                        <span className="material-symbols-outlined"
+                          style={{fontSize:"18px"}}>medication</span>
+                        Drug Interactions — Tell your doctor if taking:
+                      </h4>
+                      <div style={{display:"flex", flexWrap:"wrap", gap:"8px"}}>
+                        {product.drugInteractions.map((di, i) => (
+                          <span key={i} style={{padding:"5px 12px",
+                            background:"#faeeda", color:"#633806",
+                            borderRadius:"50px", fontSize:"0.8rem"}}>
+                            {di}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Warning */}
+                  {product.warning && (
+                    <div style={{padding:"16px 20px",
+                      background:"#ffdad6", borderRadius:"14px",
+                      display:"flex", gap:"12px", alignItems:"flex-start"}}>
+                      <span className="material-symbols-outlined"
+                        style={{color:"#ba1a1a", flexShrink:0, fontSize:"20px"}}>
+                        priority_high
+                      </span>
+                      <div>
+                        <p style={{fontWeight:700, color:"#ba1a1a", marginBottom:"4px"}}>
+                          Important Warning
+                        </p>
+                        <p style={{color:"#40493d", fontSize:"0.9rem", lineHeight:1.6}}>
+                          {product.warning}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Storage */}
+                  {product.storageInstructions && (
+                    <div style={{marginTop:"16px", padding:"14px",
+                      background:"#e6f1fb", borderRadius:"12px",
+                      display:"flex", gap:"10px", alignItems:"center"}}>
+                      <span className="material-symbols-outlined"
+                        style={{color:"#185fa5", fontSize:"20px"}}>
+                        thermostat
+                      </span>
+                      <div>
+                        <p style={{fontSize:"0.8rem", color:"#6B7280", marginBottom:"2px"}}>
+                          Storage
+                        </p>
+                        <p style={{color:"#191c1c", fontSize:"0.9rem"}}>
+                          {product.storageInstructions}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>

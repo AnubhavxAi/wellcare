@@ -46,35 +46,15 @@ export default function Hero() {
             
             {/* Left Column */}
             <div className="flex flex-col justify-center space-y-6">
-              <h1 style={{
-                fontFamily: "Manrope, sans-serif",
-                fontWeight: 800,
-                lineHeight: 1.12,
-                letterSpacing: "-0.025em",
-              }}>
-                <span style={{
-                  display: "block",
-                  color: "rgba(255,255,255,0.85)",
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  fontSize: "1rem",
-                  letterSpacing: "0.14em",
-                  marginBottom: "8px",
-                }}>
-                  AGRA'S MOST TRUSTED PHARMACY
+              <h1 className="flex flex-col">
+                <span className="text-white text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight">
+                  Agra's Most Trusted Pharmacy
                 </span>
-                <span style={{
-                  display: "block",
-                  fontSize: "clamp(2.8rem, 6vw, 4.5rem)",
-                  color: "white",
-                  fontWeight: 900,
-                  lineHeight: 1.05,
-                }}>
-                  Medicines
-                  <br/>
-                  <span style={{ color: "#9df898" }}>Delivered</span>
-                  <br/>
-                  in 2 Hours.
+                <span className="text-[#9df898] text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mt-1">
+                  — At Your Door in Under 2 Hours
+                </span>
+                <span className="text-white/90 text-xl sm:text-2xl font-medium mt-6">
+                  Delivering medicines and health across Agra.
                 </span>
               </h1>
 

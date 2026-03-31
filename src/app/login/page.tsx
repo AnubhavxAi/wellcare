@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { supabase, signInWithGoogle } from "@/lib/supabase";
 import { Smartphone, Lock, ArrowRight, MessageSquare, CheckCircle2, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";

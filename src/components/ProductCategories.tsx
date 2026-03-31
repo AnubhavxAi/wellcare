@@ -5,11 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import SmartProductImage from "@/components/SmartProductImage";
-import {
-  allProducts as localProducts,
-  categories,
-  type CategoryKey,
-} from "@/data/products";
+import { ALL_PRODUCTS as localProducts, getProductsByCategory } from "@/data/allProducts";
+import { categories } from "@/data/products";
+import { type CategoryKey } from "@/types/product";
 import { useProducts } from "@/hooks/useProducts";
 
 function ProductCategoriesContent() {
@@ -20,7 +18,7 @@ function ProductCategoriesContent() {
 
   const filteredProducts = useMemo(() => {
     const sourceProducts = products.length > 0 ? products : localProducts;
-    return sourceProducts.filter((p) => p.category === activeCategory).slice(0, 8);
+    return (activeCategory === "All" ? sourceProducts : sourceProducts.filter((p) => p.category === activeCategory)).slice(0, 8);
   }, [activeCategory, products]);
 
   const displayCategories = categories.filter(c => c !== "All");

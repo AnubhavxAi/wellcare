@@ -15,8 +15,7 @@ export const categoryIcons: Record<Exclude<CategoryKey, "All">, string> = {
   "Mankind Products": "👨‍⚕️",
 };
 
-
-const _baseProducts: Product[] = [
+export const products: Product[] = [
   // ── MEDICINES ──────────────────────────────────────────────
   {
     id: "p1",
@@ -1040,12 +1039,8 @@ const _baseProducts: Product[] = [
     form: "Cream",
     rxRequired: false,
     packSize: "15g Tube"
-  },
+  }
 ];
-
-// Import and merge the 100 new products
-import { newProducts } from "./newProducts";
-export const allProducts: Product[] = [..._baseProducts, ...newProducts];
 
 export const categories: CategoryKey[] = [
   "All",
@@ -1062,5 +1057,4 @@ export const categories: CategoryKey[] = [
   "Mankind Products",
 ];
 
-export const brands = Array.from(new Set(allProducts.map((p) => p.brand))).sort();
-
+export const brands = Array.from(new Set(products.map((p) => p.brand))).sort();

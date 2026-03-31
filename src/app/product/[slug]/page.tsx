@@ -1,6 +1,6 @@
 import React from "react";
 import { Metadata } from "next";
-import { allProducts } from "@/data/products";
+import { ALL_PRODUCTS as allProducts } from "@/data/allProducts";
 import ProductDetailClient from "./ProductDetailClient";
 import { notFound } from "next/navigation";
 
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export async function generateStaticParams() {
-  return []; // Vercel renders dynamically — no pre-generation needed
+  return allProducts.map(p => ({ slug: p.slug }));
 }
 
 export default async function ProductDetailPage({ params }: Props) {
